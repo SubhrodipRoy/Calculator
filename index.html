@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark">
+    <script src="script.js"></script>
+    <h1>Calculator</h1>
+    <div class="calculator">
+        <input type="text" class="screen" id="screen" readonly><br><br>
+
+        <div class="dropdown">
+            <button class="dropbtn" onclick="toggleDropdown()">Anonymous Constants</button>
+            <div id="myDropdown" class="dropdown-content">
+                <input type="text" placeholder="Search.." id="myInput" onkeyup="filterFunction()">
+                <a href="#" data-value="1.6726219e-27">Proton mass</a>
+                <a href="#" data-value="1.6750e-27">Neutron mass</a>
+                <a href="#" data-value="9.10938356e-31">Electron mass</a>
+                <a href="#" data-value="1.8835312e-28">Muon mass</a>
+                <a href="#" data-value="5.291772108e-11">Bohr Radius</a>
+                <a href="#" data-value="6.62607015e-34">Planck constant</a>
+                <a href="#" data-value="5.05078324e-27">Nuclear magneton</a>
+                <a href="#" data-value="9.2740100783e-24">Bohr magneton</a>
+                <a href="#" data-value="3.6260314e-34">Planck constant-rationalized</a>
+                <a href="#" data-value="7.2973525693e-3">Fine-Structure constant</a>
+                <a href="#" data-value="2.8179403227e-15">Classical electron radius</a>
+                <a href="#" data-value="2.426310238e-12">Compton wavelength</a>
+                <a href="#" data-value="2.6750132e8">Proton gyromagnetic ratio</a>
+                <a href="#" data-value="2.426310238e-12">Proton Compton wavelength</a>
+                <a href="#" data-value="2.426310238e-12">Neutron Compton wavelength</a>
+                <a href="#" data-value="1.097373e7">Rydberg constant</a>
+                <a href="#" data-value="1.66053906660e-27">Atomic mass constant</a>
+                <a href="#" data-value="1.4106047e-26">Proton magnetic moment</a>
+                <a href="#" data-value="9.284764e-24">Electron magnetic moment</a>
+                <a href="#" data-value="-9.6629e-27">Neutron magnetic moment</a>
+                <a href="#" data-value="-4.490e-26">Muon magnetic moment</a>
+                <a href="#" data-value="9.649474e4">Faraday constant</a>
+                <a href="#" data-value="1.602176634e-19">Elementary charge</a>
+                <a href="#" data-value="6.02214076e23">Avogadro constant</a>
+                <a href="#" data-value="1.380649e-23">Boltzmann constant</a>
+                <a href="#" data-value="2.242e-2">Molar volume of ideal</a>
+                <a href="#" data-value="8.3145">Molar gas constant</a>
+                <a href="#" data-value="299792458">Speed of light in vacuum</a>
+                <a href="#" data-value="3.74177e-16">First radiation constant</a>
+                <a href="#" data-value="1.438777e-2">Second radiation constant</a>
+                <a href="#" data-value="5.670374419e-8">Stefan-Boltzmann constant</a>
+                <a href="#" data-value="8.854187817e-12">Electric constant</a>
+                <a href="#" data-value="1.256637061e-6">Magnetic constant</a>
+                <a href="#" data-value="2.067833831e-15">Magnetic flux quantum</a>
+                <a href="#" data-value="9.80665">Standard acceleration due to gravity</a>
+                <a href="#" data-value="7.7480917e-5">Conductance quantum</a>
+                <a href="#" data-value="376.730313461">Characteristic impedance of vacuum</a>
+                <a href="#" data-value="273.15">Celsius temperature</a>
+                <a href="#" data-value="6.67430e-11">Universal gravitational constant</a>
+                <a href="#" data-value="101325">Standard atmospheric pressure</a>
+            </div>
+        </div>
+
+        <button class="command tap" data-value="DEL">DEL</button>
+        <button class="command tap" data-value="AC">AC</button>
+        <br><br><br><br>
+
+        <div>
+            <button class="constant tap" data-value="π">π</button>
+            <button class="constant tap" data-value="e">e</button>
+            <button class="arithmetic tap" data-value="n!">n!</button>
+            <button class="exponent tap" data-value="10^x">10<sup>x</sup></button>
+            <button class="exponent tap" data-value="Exp">Exp</button>
+            <button class="bodmas tap" data-value=")">)</button>
+            <button class="bodmas tap" data-value="(">(</button>
+        </div>
+        <div>
+            <button class="trigonometry tap" data-value="sin">sin</button>
+            <button class="trigonometry tap" data-value="cos">cos</button>
+            <button class="trigonometry tap" data-value="tan">tan</button>
+            <button class="logarithm tap" data-value="ln">ln</button>
+            <button class="logarithm tap" data-value="log">log</button>
+            <button class="numbers tap" data-value="7">7</button>
+            <button class="numbers tap" data-value="8">8</button>
+            <button class="numbers tap" data-value="9">9</button>
+            <button class="arithmetic tap" data-value="%">%</button>
+            <button class="arithmetic tap" data-value="/">/</button>
+        </div>
+        <div>
+            <button class="inverse-trigonometry tap" data-value="sin^-1">sin<sup>-1</sup></button>
+            <button class="inverse-trigonometry tap" data-value="cos^-1">cos<sup>-1</sup></button>
+            <button class="inverse-trigonometry tap" data-value="tan^-1">tan<sup>-1</sup></button>
+            <button class="logarithm tap" data-value="logyx">log<sub>y</sub>x</button>
+            <button class="algebra tap" data-value="√">√</button>
+            <button class="numbers tap" data-value="4">4</button>
+            <button class="numbers tap" data-value="5">5</button>
+            <button class="numbers tap" data-value="6">6</button>
+            <button class="arithmetic tap" data-value="×">×</button>
+            <button class="arithmetic tap" data-value="÷">÷</button>
+        </div>
+        <div>
+            <button class="PNC tap" data-value="nPr"><sup>n</sup>P<sub>r</sub></button>
+            <button class="PNC tap" data-value="nCr"><sup>n</sup>C<sub>r</sub></button>
+            <button class="algebra tap" data-value="x^y">x<sup>y</sup></button>
+            <button class="algebra tap" data-value="y√x"><sup>y</sup>√x</button>
+            <button class="algebra tap" data-value="x^3"><sup>3</sup>√</button>
+            <button class="numbers tap" data-value="1">1</button>
+            <button class="numbers tap" data-value="2">2</button>
+            <button class="numbers tap" data-value="3">3</button>
+            <button class="arithmetic tap" data-value="+">+</button>
+            <button class="arithmetic tap" data-value="-">-</button>
+        </div>
+        <div>
+            <button class="algebra tap" data-value="1/x">1/x</button>
+            <button class="exponent tap" data-value="e^x">e<sup>x</sup></button>
+            <button class="algebra tap" data-value="x^3">x<sup>3</sup></button>
+            <button class="algebra tap" data-value="x^2">x<sup>2</sup></button>
+            <button class="numbers tap" data-value=".">.</button>
+            <button class="numbers tap" data-value="0">0</button>
+            <button class="numbers tap" data-value="00">00</button>
+            <button class="answer tap" data-value="=">=</button>
+            <button class="command tap SD" data-value="S⇔D">S⇔D</button>
+        </div>
+    </div><br><br><br><br><br>
+</body>
+</html>

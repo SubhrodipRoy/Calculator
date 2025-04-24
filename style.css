@@ -1,0 +1,196 @@
+body
+{
+  background: linear-gradient(120deg,black,rgb(17, 0, 56));
+  color: white;
+}
+#colour-theme
+{
+  height: 30px;
+  width: 30px;
+  border-radius: 10px;
+  background-image: url(dark-icon.png);
+  background-size: 28px;
+  background-repeat: no-repeat;
+  transition: transform 0.5s;
+}
+#colour-theme:hover
+{
+  transform: scale(1.100);
+}
+h1  
+{
+  height: 110px;
+  width: 660px;
+  font-family:broadway;
+  font-weight: 200; 
+  font-size: 111px;
+  color:rgb(43, 21, 95);
+  text-shadow:0 0 12px cyan;
+  transition: transform .7s;
+  margin: auto;
+  padding: 100px 0 100px 0;
+}
+h1:hover 
+{
+  transform:scale(1.2);
+}
+.calculator
+{
+  margin: auto;
+  max-height:fit-content; 
+  max-width: fit-content;
+  background-color: transparent;
+  padding: 15px; 
+  border-radius: 15px;
+  box-shadow: 0 0 5px black;
+}
+.screen
+{ background-color: transparent;
+  padding:20px 20px 20px 20px;
+  font-size: 17px;
+  width: 755px;
+  height:50px;
+  border: none;
+}
+#myInput
+{
+  width: 330px;
+  box-sizing: border-box;
+  background-image: url('search.png');
+  background-size: 20px;
+  background-repeat: no-repeat;
+  font-size: 18px;
+  padding: 0px 10px 0px 35px;
+}   
+.dropbtn {
+  background-color: transparent;
+  color: white;
+  padding: 1px;
+  font-size: 22px;
+  font-family: berlin sans fb; 
+  border-radius: 4px;
+  border: none;
+  transition: transform .5s;
+}
+.dropbtn:hover
+{
+  transform: scale(1.10);
+}
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: rgb(0, 29, 90);
+  min-width: max-content;
+  overflow: auto;
+  border: 2px solid;
+  z-index: 1;
+  height: 5cm;
+  box-shadow:0 0 10PX#3db1ff;
+}
+
+.dropdown-content a
+{
+  font-size: 14px;
+  color: white;
+  padding: 12px 16px;
+  display: block;
+  text-decoration: none;
+  border-bottom: 1px solid white;
+}
+
+.dropdown a:hover {background-color: #51b1ff;}
+
+.show {display: block;}
+.tap
+{
+  background-color: transparent;
+  font-size: 26px;
+  padding: 10px;
+  height: 2cm;
+  width: 2cm;
+  font-family: berlin sans fb;
+  border-radius: 40px;
+  border: none;
+  opacity: 0.7;
+  transition: transform 1s;
+
+}
+.tap:hover
+{
+  box-shadow: 0 0 5px white;
+  transform: scale(1.2);
+  opacity:1;
+}
+.command
+{
+  color: rgb(255, 60, 0);
+  float: right;
+}
+.SD
+{
+  width: 155.5px;
+}
+.arithmetic
+{
+  color: yellow;
+}
+.exponent
+{
+  color: rgb(255, 129, 255);
+}
+.answer
+{
+  color: green;
+  font-size: 30px;
+  font-weight: 500;
+}
+.algebra
+{
+  color: cyan;
+}
+.bodmas
+{
+  color: rgb(255, 208, 139);
+  float: right;
+}
+.logarithm
+{
+  color:greenyellow;
+}
+.PNC
+{
+  color: gold;
+}
+.inverse-trigonometry
+{
+  color: rgb(200, 180, 255);
+}
+.trigonometry
+{
+  color: pink;
+}
+
+.constant
+{
+  color: silver;
+}
+.numbers
+{
+  color:white;
+}
+
+input.screen {
+  color: black; /* Make sure text is visible */
+  background-color: white;
+}
+body.dark input.screen {
+  color: white; /* Light text in dark mode */
+  background: linear-gradient(120deg,rgb(27, 0, 90),rgb(27, 0, 44),rgb(81, 0, 131));
+  font-family: berlin sans fb;
+  font-size: 30px;
+}
