@@ -53,90 +53,79 @@ document.addEventListener("DOMContentLoaded", () => {
           } else if (value === "AC") {
               screen.value = "";
           } else if (value === "=") {
-              try {
-                  let input = screen.value
-                      .replace(/×/g, '*')
-                      .replace(/÷/g, '/')
-                      .replace(/%/g, '/100*');
-
-                  if (input.endsWith('*')) {
-                      input = input.slice(0, -1);
+              screen.value = evaluateExpression(screen.value);
+          } else if (value === "S⇔D") {
+              // S⇔D button functionality: Decimal ↔ Fraction
+              if (screen.value.includes("/")) {
+                  // Fraction to Decimal conversion
+                  const fractionParts = screen.value.split("/");
+                  if (fractionParts.length === 2) {
+                      const numerator = parseFloat(fractionParts[0]);
+                      const denominator = parseFloat(fractionParts[1]);
+                      if (!isNaN(numerator) && !isNaN(denominator) && denominator !== 0) {
+                          screen.value = (numerator / denominator).toString();
+                      } else {
+                          screen.value = "Error";
+                      }
                   }
-
-                  screen.value = eval(input);
-              } catch (e) {
-                  screen.value = "Error";
+              } else {
+                  // Decimal to Fraction conversion
+                  const decimalValue = parseFloat(screen.value);
+                  if (!isNaN(decimalValue)) {
+                      const fraction = decimalToFraction(decimalValue);
+                      screen.value = fraction;
+                  } else {
+                      screen.value = "Error";
+                  }
               }
           } else {
               screen.value += value;
           }
       });
   });
-});
-function gcd(a, b) {
-    return b ? gcd(b, a % b) : a;
-}
 
-function decimalToFraction(decimal) {
-    const tolerance = 1.0E-10;
-    let h1 = 1, h2 = 0, k1 = 0, k2 = 1;
-    let b = decimal;
-    do {
-        const a = Math.floor(b);
-        let aux = h1; h1 = a * h1 + h2; h2 = aux;
-        aux = k1; k1 = a * k1 + k2; k2 = aux;
-        b = 1 / (b - a);
-    } while (Math.abs(decimal - h1 / k1) > decimal * tolerance);
-    return h1 + "/" + k1;
-}
+  // Function to convert decimal to fraction
+  function decimalToFraction(decimal) {
+      const precision = 1e12; // Increased precision level to avoid errors
+      let denominator = precision;
+      let numerator = Math.round(decimal * denominator);
 
-function isFraction(input) {
-    return /^-?\d+\/\d+$/.test(input);
-}
+      // Simplify the fraction by finding the GCD
+      const gcd = (a, b) => (b === 0 ? a : gcd(b, a % b));
+      const commonDivisor = gcd(numerator, denominator);
 
-function fractionToDecimal(fraction) {
-    const [numerator, denominator] = fraction.split('/');
-    return parseFloat(numerator) / parseFloat(denominator);
-}
+      // Simplify the fraction
+      numerator = numerator / commonDivisor;
+      denominator = denominator / commonDivisor;
 
-// Extend the existing button loop:
-buttons.forEach(button => {
-    button.addEventListener("click", () => {
-        const value = button.getAttribute("data-value");
+      // To avoid overly large fractions, simplify them further by limiting the denominator size
+      if (denominator > 1000000) {
+          return decimal.toFixed(12); // Return the decimal as string if the fraction is too complex
+      }
 
-        if (value === "DEL") {
-            screen.value = screen.value.slice(0, -1);
-        } else if (value === "AC") {
-            screen.value = "";
-        } else if (value === "=") {
-            try {
-                let input = screen.value
-                    .replace(/×/g, '*')
-                    .replace(/÷/g, '/')
-                    .replace(/%/g, '/100*');
+      return `${numerator}/${denominator}`;
+  }
 
-                if (input.endsWith('*')) {
-                    input = input.slice(0, -1);
-                }
+  // Function to evaluate the expression with constants
+  function evaluateExpression(expression) {
+      // Replace symbols with actual values
+      expression = expression.replace(/π/g, Math.PI.toString());
+      expression = expression.replace(/(?<!\w)e(?![a-zA-Z])/g, Math.E.toString());
 
-                screen.value = eval(input);
-            } catch (e) {
-                screen.value = "Error";
-            }
-        } else if (value === "S⇔D") {
-            const val = screen.value.trim();
-            if (!val) return;
+      // Replace mathematical operators
+      expression = expression.replace(/×/g, '*')
+                             .replace(/÷/g, '/')
+                             .replace(/%/g, '/100*');
 
-            if (isFraction(val)) {
-                screen.value = fractionToDecimal(val);
-            } else {
-                const num = parseFloat(val);
-                if (!isNaN(num)) {
-                    screen.value = decimalToFraction(num);
-                }
-            }
-        } else {
-            screen.value += value;
-        }
-    });
+      // Trim trailing operators
+      if (/[+\-*/.]$/.test(expression)) {
+          expression = expression.slice(0, -1);
+      }
+
+      try {
+          return eval(expression);
+      } catch (e) {
+          return "Error";
+      }
+  }
 });
