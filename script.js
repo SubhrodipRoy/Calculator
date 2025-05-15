@@ -23,12 +23,11 @@ document.addEventListener("DOMContentLoaded", () => {
     // Append constant to screen on click
     dropdownContent.querySelectorAll("a[data-value]").forEach((link) => {
         link.addEventListener("click", (event) => {
-            event.preventDefault(); // prevent anchor jump
+            event.preventDefault();
             const value = link.getAttribute("data-value");
             screen.value += value;
             dropdownContent.classList.remove("show");
             searchInput.value = "";
-            // Show all again
             dropdownContent.querySelectorAll("a[data-value]").forEach((a) => {
                 a.style.display = "";
             });
@@ -54,40 +53,28 @@ document.addEventListener("DOMContentLoaded", () => {
                 screen.value = "";
             } else if (value === "=") {
                 screen.value = evaluateExpression(screen.value);
-            } 
-            else if (value === "S⇔D") {
+            } else if (value === "S⇔D") {
                 const input = screen.value.trim();
-            
+
                 if (/^\d+\/\d+$/.test(input)) {
-                    // It's a fraction, convert to decimal
                     const [num, denom] = input.split("/").map(Number);
-                    if (denom === 0) {
-                        screen.value = "Error";
-                    } else {
-                        screen.value = (num / denom).toString();
-                    }
+                    screen.value = denom === 0 ? "Error" : (num / denom).toString();
                 } else if (!isNaN(input)) {
-                    // It's a decimal, convert to simplified fraction
                     const decimal = parseFloat(input);
                     screen.value = decimalToFraction(decimal);
                 } else {
-                    // Evaluate expression, then try to convert result
                     const result = evaluateExpression(input);
-                    if (typeof result === "number" && !isNaN(result)) {
-                        screen.value = decimalToFraction(result);
-                    } else {
-                        screen.value = "Error";
-                    }
+                    screen.value = (typeof result === "number" && !isNaN(result)) ? decimalToFraction(result) : "Error";
                 }
-            }
-            
-            else {
+            } else if (["sin", "cos", "tan", "sin^-1", "cos^-1", "tan^-1"].includes(value)) {
+                screen.value += `${value}(`;
+            } else {
                 screen.value += value;
             }
         });
     });
 
-    // Function to convert decimal to fraction
+    // Convert decimal to fraction
     function decimalToFraction(decimal) {
         const tolerance = 1.0E-10;
         let h1 = 1, h2 = 0;
@@ -99,23 +86,32 @@ document.addEventListener("DOMContentLoaded", () => {
             aux = k1; k1 = a * k1 + k2; k2 = aux;
             b = 1 / (b - a);
         } while (Math.abs(decimal - h1 / k1) > decimal * tolerance);
-    
+
         return `${h1}/${k1}`;
     }
-    
 
-    // Function to evaluate the expression with constants
+    // Evaluate expression with constants and trigonometry
     function evaluateExpression(expression) {
-        // Replace symbols with actual values
+        // Replace constants
         expression = expression.replace(/π/g, Math.PI.toString());
         expression = expression.replace(/(?<!\w)e(?![a-zA-Z])/g, Math.E.toString());
 
-        // Replace mathematical operators
+        // Replace operators
         expression = expression.replace(/×/g, '*')
                                .replace(/÷/g, '/')
                                .replace(/%/g, '/100*');
 
-        // Trim trailing operators
+        // Replace inverse trig functions
+        expression = expression.replace(/sin\^-1\(/g, 'Math.asin(');
+        expression = expression.replace(/cos\^-1\(/g, 'Math.acos(');
+        expression = expression.replace(/tan\^-1\(/g, 'Math.atan(');
+
+        // Convert regular trig functions to radians
+        expression = expression.replace(/sin\(([^)]+)\)/g, 'Math.sin(($1)*Math.PI/180)');
+        expression = expression.replace(/cos\(([^)]+)\)/g, 'Math.cos(($1)*Math.PI/180)');
+        expression = expression.replace(/tan\(([^)]+)\)/g, 'Math.tan(($1)*Math.PI/180)');
+
+        // Trim trailing operator
         if (/[+\-*/.]$/.test(expression)) {
             expression = expression.slice(0, -1);
         }
