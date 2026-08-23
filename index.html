@@ -1,124 +1,1167 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculator</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VANTA // Compute Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.1/math.min.js"></script>
+<style>
+:root{
+  --void:#060A12;
+  --panel:#0C131F;
+  --panel-2:#101A29;
+  --line: rgba(63,224,208,0.18);
+  --line-strong: rgba(63,224,208,0.4);
+  --accent:#3FE0D0;
+  --accent-dim: rgba(63,224,208,0.5);
+  --accent2:#C77DFF;
+  --warn:#FF6B6B;
+  --text:#DCEEFF;
+  --text-dim:#5F7A94;
+  --text-dim2:#3A4A5C;
+  --radius:10px;
+  --mono: 'JetBrains Mono', monospace;
+  --display: 'Space Grotesk', sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--void);
+  color:var(--text);
+  font-family:var(--mono);
+  min-height:100vh;
+  overflow-x:hidden;
+  position:relative;
+}
+body::before{
+  content:"";
+  position:fixed; inset:0;
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size:42px 42px;
+  opacity:0.12;
+  pointer-events:none;
+  mask-image: radial-gradient(ellipse at 50% 0%, black 0%, transparent 75%);
+}
+body::after{
+  content:"";
+  position:fixed; inset:0;
+  background: radial-gradient(ellipse 900px 500px at 20% -10%, rgba(63,224,208,0.10), transparent 60%),
+              radial-gradient(ellipse 700px 500px at 100% 10%, rgba(199,125,255,0.08), transparent 60%);
+  pointer-events:none;
+}
+@media (prefers-reduced-motion: no-preference){
+  .pulse{ animation: pulseGlow 3.2s ease-in-out infinite; }
+}
+@keyframes pulseGlow{
+  0%,100%{ opacity:1; }
+  50%{ opacity:0.55; }
+}
+.wrap{
+  position:relative; z-index:1;
+  max-width:1180px;
+  margin:0 auto;
+  padding:22px 18px 60px;
+}
+header.top{
+  display:flex; align-items:flex-end; justify-content:space-between;
+  gap:16px; flex-wrap:wrap;
+  margin-bottom:18px;
+  border-bottom:1px solid var(--line);
+  padding-bottom:14px;
+}
+.brand{ display:flex; align-items:center; gap:12px; }
+.brand-mark{
+  width:34px;height:34px;border:1px solid var(--line-strong);
+  border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--accent);
+  font-family:var(--display); font-weight:700; font-size:15px;
+  box-shadow:0 0 14px rgba(63,224,208,0.25) inset;
+}
+.brand h1{
+  font-family:var(--display); font-weight:700; font-size:20px; letter-spacing:0.5px;
+  margin:0; color:var(--text);
+}
+.brand p{
+  margin:2px 0 0; font-size:11px; color:var(--text-dim); letter-spacing:1.5px; text-transform:uppercase;
+}
+.status{
+  display:flex; gap:18px; font-size:11px; color:var(--text-dim); letter-spacing:0.5px;
+}
+.status b{ color:var(--accent); font-weight:600; }
+.status .dot{
+  display:inline-block; width:6px; height:6px; border-radius:50%;
+  background:var(--accent); margin-right:6px; box-shadow:0 0 8px var(--accent);
+}
+
+nav.tabs{
+  display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px;
+}
+nav.tabs button{
+  background:var(--panel);
+  border:1px solid var(--line);
+  color:var(--text-dim);
+  font-family:var(--mono); font-size:11px; letter-spacing:1px; text-transform:uppercase;
+  padding:9px 14px; border-radius:7px; cursor:pointer;
+  transition:all .15s ease;
+}
+nav.tabs button:hover{ color:var(--text); border-color:var(--line-strong); }
+nav.tabs button.active{
+  color:var(--void); background:var(--accent); border-color:var(--accent);
+  box-shadow:0 0 16px rgba(63,224,208,0.35);
+  font-weight:700;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns: 1fr 300px;
+  gap:16px;
+  align-items:start;
+}
+@media (max-width: 880px){
+  .grid{ grid-template-columns: 1fr; }
+}
+
+.panel{
+  background:linear-gradient(180deg, var(--panel), var(--panel-2));
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:16px;
+  position:relative;
+}
+.panel::before, .panel::after{
+  content:""; position:absolute; width:10px; height:10px;
+  border-top:1px solid var(--accent-dim); border-left:1px solid var(--accent-dim);
+  top:-1px; left:-1px;
+}
+.panel::after{
+  left:auto; right:-1px; top:auto; bottom:-1px;
+  border-top:none; border-left:none;
+  border-bottom:1px solid var(--accent-dim); border-right:1px solid var(--accent-dim);
+}
+
+/* DISPLAY */
+.display{
+  background:#05090F;
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:16px 16px 14px;
+  margin-bottom:14px;
+  position:relative;
+  overflow:hidden;
+}
+.display .prev{
+  min-height:16px;
+  font-size:12px; color:var(--text-dim);
+  text-align:right; word-wrap:break-word; letter-spacing:0.3px;
+}
+.display .cur{
+  width:100%; background:transparent; border:none; outline:none;
+  color:var(--text); font-family:var(--mono); font-weight:600;
+  font-size:clamp(22px,4.5vw,34px);
+  text-align:right; letter-spacing:1px;
+  text-shadow:0 0 18px rgba(63,224,208,0.35);
+  caret-color:var(--accent);
+}
+.display .meta{
+  display:flex; justify-content:space-between; margin-top:8px;
+  font-size:10px; color:var(--text-dim2); letter-spacing:1px; text-transform:uppercase;
+}
+.display .meta span.on{ color:var(--accent); }
+.scan{
+  position:absolute; left:0; right:0; height:2px;
+  background:linear-gradient(90deg, transparent, var(--accent), transparent);
+  top:0; opacity:0.6;
+}
+@media (prefers-reduced-motion: no-preference){
+  .scan{ animation: scanmove 4s linear infinite; }
+}
+@keyframes scanmove{ 0%{top:0;} 100%{top:100%;} }
+
+/* KEYPADS */
+.pad{ display:grid; gap:8px; }
+.pad.sci{ grid-template-columns: repeat(5,1fr); }
+button.key{
+  background:#101B29; border:1px solid var(--line);
+  color:var(--text); font-family:var(--mono); font-size:14px; font-weight:600;
+  padding:12px 4px; border-radius:8px; cursor:pointer;
+  transition:transform .06s ease, border-color .15s ease, background .15s ease;
+}
+button.key:hover{ border-color:var(--line-strong); background:#132234; }
+button.key:active{ transform:scale(0.95); }
+button.key.op{ color:var(--accent); }
+button.key.fn{ color:var(--accent2); font-size:12px; }
+button.key.eq{ background:var(--accent); color:var(--void); border-color:var(--accent); font-weight:700; }
+button.key.eq:hover{ background:#5CEBDC; }
+button.key.warn{ color:var(--warn); }
+button.key.ghost{ background:transparent; color:var(--text-dim); }
+button.key.toggleon{ background:rgba(63,224,208,0.15); border-color:var(--accent); color:var(--accent); }
+
+.row-tools{
+  display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;
+  position:relative;
+}
+.row-tools button{
+  background:var(--panel-2); border:1px solid var(--line); color:var(--text-dim);
+  font-family:var(--mono); font-size:11px; padding:7px 10px; border-radius:6px; cursor:pointer;
+  letter-spacing:0.5px;
+}
+.row-tools button:hover{ color:var(--text); border-color:var(--line-strong); }
+.row-tools button.on{ color:var(--accent); border-color:var(--accent); background:rgba(63,224,208,0.08); }
+
+label.small{ font-size:10px; color:var(--text-dim); letter-spacing:1px; text-transform:uppercase; display:block; margin-bottom:6px; }
+input[type=text], input[type=number], select, textarea{
+  width:100%; background:#0A1220; border:1px solid var(--line); color:var(--text);
+  font-family:var(--mono); font-size:13px; padding:9px 10px; border-radius:6px; outline:none;
+}
+input[type=text]:focus, input[type=number]:focus, select:focus, textarea:focus{ border-color:var(--accent); }
+.field{ margin-bottom:12px; }
+.two-col{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.three-col{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+
+/* results table */
+.stat-table{ width:100%; border-collapse:collapse; font-size:12px; margin-top:12px;}
+.stat-table td{ padding:7px 8px; border-bottom:1px solid var(--line); }
+.stat-table td:first-child{ color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px; font-size:10px;}
+.stat-table td:last-child{ text-align:right; color:var(--accent); font-weight:600;}
+
+.chips{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; min-height:30px; }
+.chip{
+  background:#101B29; border:1px solid var(--line); padding:5px 9px; border-radius:20px;
+  font-size:12px; display:flex; align-items:center; gap:6px;
+}
+.chip button{ background:none; border:none; color:var(--warn); cursor:pointer; font-size:12px; line-height:1;}
+
+/* matrix grid */
+.matrix-grid{ display:inline-grid; gap:5px; margin-bottom:8px; }
+.matrix-grid input{ width:56px; text-align:center; padding:6px 4px; }
+
+/* custom graph engine */
+.graph-shell{ display:grid; grid-template-columns:230px 1fr; gap:12px; }
+@media (max-width:700px){ .graph-shell{ grid-template-columns:1fr; } }
+.graph-sidebar{
+  background:#0A121F; border:1px solid var(--line); border-radius:8px;
+  padding:10px; max-height:520px; overflow-y:auto;
+}
+.side-label{ font-size:10px; color:var(--text-dim); letter-spacing:1px; text-transform:uppercase; margin:2px 0 8px; }
+.expr-row{ display:flex; align-items:center; gap:6px; margin-bottom:6px; }
+.expr-row .swatch{ width:16px;height:16px;border-radius:4px;flex:none;cursor:pointer;border:1px solid rgba(255,255,255,0.25); }
+.expr-row input[type=text]{ flex:1; padding:6px 7px; font-size:11px; }
+.expr-row button{ background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:13px;flex:none;padding:2px; }
+.expr-row button.eye.off{ color:var(--text-dim2); }
+.expr-row button.del:hover{ color:var(--warn); }
+.ghost-add{ width:100%; text-align:left; border:1px dashed var(--line); margin-bottom:14px; font-size:11px; padding:8px; border-radius:6px; background:transparent; color:var(--text-dim); cursor:pointer; font-family:var(--mono); }
+.ghost-add:hover{ color:var(--text); border-color:var(--line-strong); }
+.slider-row{ margin-bottom:10px; background:#0D1826; border:1px solid var(--line); border-radius:6px; padding:8px; }
+.slider-row .s-head{ display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:6px; font-size:11px; }
+.slider-row .s-head input[type=text]{ width:40px; padding:4px 5px; font-size:11px; text-align:center; }
+.slider-row .s-val{ color:var(--accent); font-size:11px; flex:1; text-align:center; }
+.slider-row input[type=range]{ width:100%; accent-color:var(--accent); }
+.slider-row .s-range{ display:flex; gap:6px; margin-top:6px; }
+.slider-row .s-range input{ padding:4px 5px; font-size:10px; }
+.slider-row button.del{ background:none;border:none;color:var(--warn);cursor:pointer;font-size:12px;flex:none; }
+.graph-stage{ position:relative; }
+.graph-toolbar{ display:flex; align-items:center; gap:6px; margin-bottom:8px; }
+.graph-toolbar button{ background:var(--panel-2); border:1px solid var(--line); color:var(--text-dim); width:28px;height:28px;border-radius:6px;cursor:pointer; font-family:var(--mono); font-size:14px; }
+.graph-toolbar button:hover{ color:var(--text); border-color:var(--line-strong); }
+.coord-readout{ margin-left:auto; font-size:11px; color:var(--text-dim); }
+canvas#graphCanvas{ width:100%; height:460px; background:#05090F; border:1px solid var(--line); border-radius:8px; display:block; cursor:grab; touch-action:none; }
+canvas#graphCanvas.dragging{ cursor:grabbing; }
+
+/* history sidebar */
+.hist-list{ display:flex; flex-direction:column; gap:8px; max-height:520px; overflow-y:auto; padding-right:4px;}
+.hist-item{
+  background:#0A121F; border:1px solid var(--line); border-radius:7px; padding:8px 10px; cursor:pointer;
+}
+.hist-item:hover{ border-color:var(--line-strong); }
+.hist-item .h-expr{ font-size:11px; color:var(--text-dim); word-break:break-all;}
+.hist-item .h-res{ font-size:14px; color:var(--accent); font-weight:600; margin-top:2px;}
+.hist-empty{ color:var(--text-dim2); font-size:12px; text-align:center; padding:30px 0; }
+.side-title{ font-family:var(--display); font-size:13px; letter-spacing:1px; text-transform:uppercase; color:var(--text); margin:0 0 10px; display:flex; justify-content:space-between; align-items:center;}
+.side-title button{ background:none; border:1px solid var(--line); color:var(--text-dim); font-size:10px; padding:4px 8px; border-radius:5px; cursor:pointer; font-family:var(--mono); }
+.mem-box{ margin-top:16px; padding-top:14px; border-top:1px solid var(--line); }
+.mem-row{ display:flex; justify-content:space-between; font-size:11px; color:var(--text-dim); margin-bottom:6px; }
+.mem-row b{ color:var(--accent2); }
+
+.hidden{ display:none !important; }
+.hint{ font-size:11px; color:var(--text-dim2); margin-top:8px; line-height:1.5; }
+footer{ text-align:center; color:var(--text-dim2); font-size:10px; margin-top:26px; letter-spacing:1px; }
+
+/* CONSTANTS LIBRARY */
+.const-wrap{ position:relative; }
+.const-btn{
+  background:rgba(199,125,255,0.10); border:1px solid rgba(199,125,255,0.4); color:var(--accent2);
+  font-family:var(--mono); font-size:11px; padding:7px 12px; border-radius:6px; cursor:pointer;
+  letter-spacing:0.5px; display:flex; align-items:center; gap:6px;
+}
+.const-btn:hover{ background:rgba(199,125,255,0.18); }
+.const-panel{
+  position:absolute; top:calc(100% + 8px); left:0;
+  width:min(420px, 90vw);
+  max-height:360px;
+  background:#0A0F1A; border:1px solid var(--line-strong); border-radius:10px;
+  box-shadow:0 18px 40px rgba(0,0,0,0.55), 0 0 0 1px rgba(199,125,255,0.15);
+  z-index:40;
+  display:flex; flex-direction:column;
+  overflow:hidden;
+}
+.const-panel input{ margin:10px; width:calc(100% - 20px); }
+.const-list{ overflow-y:auto; padding:0 6px 8px; }
+.const-item{
+  display:flex; justify-content:space-between; align-items:center; gap:10px;
+  padding:8px 10px; border-radius:6px; cursor:pointer; font-size:12px;
+}
+.const-item:hover{ background:rgba(63,224,208,0.10); }
+.const-item .c-name{ color:var(--text); }
+.const-item .c-val{ color:var(--accent); font-size:11px; white-space:nowrap; }
+.const-empty{ padding:14px; text-align:center; color:var(--text-dim2); font-size:12px; }
+</style>
 </head>
-<body class="dark">
-    <script src="script.js"></script>
-    <h1>Calculator</h1>
-    <div class="calculator">
-        <input type="text" class="screen" id="screen" readonly><br><br>
+<body>
+<div class="wrap">
 
-        <div class="dropdown">
-            <button class="dropbtn" onclick="toggleDropdown()">Anonymous Constants</button>
-            <div id="myDropdown" class="dropdown-content">
-                <input type="text" placeholder="Search.." id="myInput" onkeyup="filterFunction()">
-                <a href="#" data-value="1.6726219e-27">Proton mass</a>
-                <a href="#" data-value="1.6750e-27">Neutron mass</a>
-                <a href="#" data-value="9.10938356e-31">Electron mass</a>
-                <a href="#" data-value="1.8835312e-28">Muon mass</a>
-                <a href="#" data-value="5.291772108e-11">Bohr Radius</a>
-                <a href="#" data-value="6.62607015e-34">Planck constant</a>
-                <a href="#" data-value="5.05078324e-27">Nuclear magneton</a>
-                <a href="#" data-value="9.2740100783e-24">Bohr magneton</a>
-                <a href="#" data-value="3.6260314e-34">Planck constant-rationalized</a>
-                <a href="#" data-value="7.2973525693e-3">Fine-Structure constant</a>
-                <a href="#" data-value="2.8179403227e-15">Classical electron radius</a>
-                <a href="#" data-value="2.426310238e-12">Compton wavelength</a>
-                <a href="#" data-value="2.6750132e8">Proton gyromagnetic ratio</a>
-                <a href="#" data-value="2.426310238e-12">Proton Compton wavelength</a>
-                <a href="#" data-value="2.426310238e-12">Neutron Compton wavelength</a>
-                <a href="#" data-value="1.097373e7">Rydberg constant</a>
-                <a href="#" data-value="1.66053906660e-27">Atomic mass constant</a>
-                <a href="#" data-value="1.4106047e-26">Proton magnetic moment</a>
-                <a href="#" data-value="9.284764e-24">Electron magnetic moment</a>
-                <a href="#" data-value="-9.6629e-27">Neutron magnetic moment</a>
-                <a href="#" data-value="-4.490e-26">Muon magnetic moment</a>
-                <a href="#" data-value="9.649474e4">Faraday constant</a>
-                <a href="#" data-value="1.602176634e-19">Elementary charge</a>
-                <a href="#" data-value="6.02214076e23">Avogadro constant</a>
-                <a href="#" data-value="1.380649e-23">Boltzmann constant</a>
-                <a href="#" data-value="2.242e-2">Molar volume of ideal</a>
-                <a href="#" data-value="8.3145">Molar gas constant</a>
-                <a href="#" data-value="299792458">Speed of light in vacuum</a>
-                <a href="#" data-value="3.74177e-16">First radiation constant</a>
-                <a href="#" data-value="1.438777e-2">Second radiation constant</a>
-                <a href="#" data-value="5.670374419e-8">Stefan-Boltzmann constant</a>
-                <a href="#" data-value="8.854187817e-12">Electric constant</a>
-                <a href="#" data-value="1.256637061e-6">Magnetic constant</a>
-                <a href="#" data-value="2.067833831e-15">Magnetic flux quantum</a>
-                <a href="#" data-value="9.80665">Standard acceleration due to gravity</a>
-                <a href="#" data-value="7.7480917e-5">Conductance quantum</a>
-                <a href="#" data-value="376.730313461">Characteristic impedance of vacuum</a>
-                <a href="#" data-value="273.15">Celsius temperature</a>
-                <a href="#" data-value="6.67430e-11">Universal gravitational constant</a>
-                <a href="#" data-value="101325">Standard atmospheric pressure</a>
+  <header class="top">
+    <div class="brand">
+      <div class="brand-mark pulse">V9</div>
+      <div>
+        <h1>VANTA <span style="color:var(--accent2)">//</span> Compute Console</h1>
+        <p>Multi-domain analytical instrument</p>
+      </div>
+    </div>
+    <div class="status">
+      <div><span class="dot pulse"></span><b>Core</b> Online</div>
+      <div id="modeStatus"><b>Mode</b> Calculator</div>
+      <div><b>Precision</b> f64</div>
+    </div>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button data-mode="calculator" class="active">Calculator</button>
+    <button data-mode="stats">Statistics</button>
+    <button data-mode="matrix">Matrix</button>
+    <button data-mode="graph">Graph</button>
+    <button data-mode="convert">Units</button>
+    <button data-mode="base">Base / Bitwise</button>
+  </nav>
+
+  <div class="grid">
+    <!-- MAIN PANEL -->
+    <div class="panel" id="mainPanel">
+
+      <!-- shared display -->
+      <div id="calcDisplayWrap">
+        <div class="display">
+          <div class="scan"></div>
+          <div class="prev" id="prevLine">&nbsp;</div>
+          <input class="cur" id="curLine" type="text" value="0" autocomplete="off" spellcheck="false">
+          <div class="meta">
+            <span id="angleTag" class="hidden">RAD</span>
+            <span id="memTag" class="hidden">M</span>
+            <span style="margin-left:auto" id="errTag"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CALCULATOR (scientific keypad is now the standard layer) -->
+      <div class="mode-panel" data-panel="calculator">
+        <div class="row-tools">
+          <button id="degBtn">DEG</button>
+          <button id="radBtn" class="on">RAD</button>
+          <button id="invBtn">INV</button>
+          <div class="const-wrap">
+            <button class="const-btn" id="constToggle">⚛ Physical Constants ▾</button>
+            <div class="const-panel hidden" id="constPanel">
+              <input type="text" id="constSearch" placeholder="Search constants…">
+              <div class="const-list" id="constList"></div>
             </div>
+          </div>
         </div>
+        <div class="pad sci" id="padScientific"></div>
+      </div>
 
-        <button class="command tap" data-value="DEL">DEL</button>
-        <button class="command tap" data-value="AC">AC</button>
-        <br><br><br><br>
+      <!-- STATS -->
+      <div class="mode-panel hidden" data-panel="stats">
+        <label class="small">Dataset</label>
+        <div class="field two-col" style="grid-template-columns:1fr auto;">
+          <input type="text" id="statInput" placeholder="Type a number, press Enter to add">
+          <button class="key ghost" style="padding:9px 16px;" id="statClear">Clear</button>
+        </div>
+        <div class="chips" id="statChips"></div>
+        <table class="stat-table" id="statTable"></table>
+        <div class="hint">Enter values one at a time, or paste comma/space separated values and press Enter.</div>
+      </div>
 
-        <div>
-            <button class="constant tap" data-value="π">π</button>
-            <button class="constant tap" data-value="e">e</button>
-            <button class="arithmetic tap" data-value="n!">n!</button>
-            <button class="exponent tap" data-value="10^x">10<sup>x</sup></button>
-            <button class="exponent tap" data-value="Exp">Exp</button>
-            <button class="bodmas tap" data-value=")">)</button>
-            <button class="bodmas tap" data-value="(">(</button>
+      <!-- MATRIX -->
+      <div class="mode-panel hidden" data-panel="matrix">
+        <div class="two-col">
+          <div>
+            <label class="small">Matrix A — size</label>
+            <select id="matASize"><option>2</option><option>3</option><option selected>2</option></select>
+          </div>
+          <div>
+            <label class="small">Matrix B — size</label>
+            <select id="matBSize"><option>2</option><option>3</option><option selected>2</option></select>
+          </div>
         </div>
-        <div>
-            <button class="trigonometry tap" data-value="sin">sin</button>
-            <button class="trigonometry tap" data-value="cos">cos</button>
-            <button class="trigonometry tap" data-value="tan">tan</button>
-            <button class="logarithm tap" data-value="ln">ln</button>
-            <button class="logarithm tap" data-value="log">log</button>
-            <button class="numbers tap" data-value="7">7</button>
-            <button class="numbers tap" data-value="8">8</button>
-            <button class="numbers tap" data-value="9">9</button>
-            <button class="arithmetic tap" data-value="%">%</button>
-            <button class="arithmetic tap" data-value="/">/</button>
+        <div class="two-col" style="margin-top:10px;">
+          <div><div id="matA" class="matrix-grid"></div></div>
+          <div><div id="matB" class="matrix-grid"></div></div>
         </div>
-        <div>
-            <button class="inverse-trigonometry tap" data-value="sin^-1">sin<sup>-1</sup></button>
-            <button class="inverse-trigonometry tap" data-value="cos^-1">cos<sup>-1</sup></button>
-            <button class="inverse-trigonometry tap" data-value="tan^-1">tan<sup>-1</sup></button>
-            <button class="logarithm tap" data-value="logyx">log<sub>y</sub>x</button>
-            <button class="algebra tap" data-value="√">√</button>
-            <button class="numbers tap" data-value="4">4</button>
-            <button class="numbers tap" data-value="5">5</button>
-            <button class="numbers tap" data-value="6">6</button>
-            <button class="arithmetic tap" data-value="×">×</button>
-            <button class="arithmetic tap" data-value="÷">÷</button>
+        <div class="row-tools" style="margin-top:6px;">
+          <button data-op="add">A + B</button>
+          <button data-op="sub">A − B</button>
+          <button data-op="mul">A × B</button>
+          <button data-op="detA">det(A)</button>
+          <button data-op="detB">det(B)</button>
+          <button data-op="invA">A⁻¹</button>
+          <button data-op="invB">B⁻¹</button>
+          <button data-op="transA">Aᵀ</button>
+          <button data-op="transB">Bᵀ</button>
         </div>
-        <div>
-            <button class="PNC tap" data-value="nPr"><sup>n</sup>P<sub>r</sub></button>
-            <button class="PNC tap" data-value="nCr"><sup>n</sup>C<sub>r</sub></button>
-            <button class="algebra tap" data-value="x^y">x<sup>y</sup></button>
-            <button class="algebra tap" data-value="y√x"><sup>y</sup>√x</button>
-            <button class="algebra tap" data-value="x^3"><sup>3</sup>√</button>
-            <button class="numbers tap" data-value="1">1</button>
-            <button class="numbers tap" data-value="2">2</button>
-            <button class="numbers tap" data-value="3">3</button>
-            <button class="arithmetic tap" data-value="+">+</button>
-            <button class="arithmetic tap" data-value="-">-</button>
+        <label class="small" style="margin-top:10px;">Result</label>
+        <div id="matResult" class="matrix-grid" style="color:var(--accent);"></div>
+      </div>
+
+      <!-- GRAPH -->
+      <div class="mode-panel hidden" data-panel="graph">
+        <div class="graph-shell">
+          <div class="graph-sidebar">
+            <div class="side-label">Expressions</div>
+            <div id="exprList"></div>
+            <button class="ghost-add" id="addExprBtn">+ Add expression</button>
+            <div class="side-label">Sliders</div>
+            <div id="sliderList"></div>
+            <button class="ghost-add" id="addSliderBtn">+ Add slider</button>
+          </div>
+          <div class="graph-stage">
+            <div class="graph-toolbar">
+              <button id="zoomInBtn" title="Zoom in">+</button>
+              <button id="zoomOutBtn" title="Zoom out">−</button>
+              <button id="resetViewBtn" title="Reset view">⟲</button>
+              <span class="coord-readout" id="coordReadout"></span>
+            </div>
+            <canvas id="graphCanvas"></canvas>
+          </div>
         </div>
-        <div>
-            <button class="algebra tap" data-value="1/x">1/x</button>
-            <button class="exponent tap" data-value="e^x">e<sup>x</sup></button>
-            <button class="algebra tap" data-value="x^3">x<sup>3</sup></button>
-            <button class="algebra tap" data-value="x^2">x<sup>2</sup></button>
-            <button class="numbers tap" data-value=".">.</button>
-            <button class="numbers tap" data-value="0">0</button>
-            <button class="numbers tap" data-value="00">00</button>
-            <button class="answer tap" data-value="=">=</button>
-            <button class="command tap SD" data-value="S⇔D">S⇔D</button>
+        <div class="hint">Built in-house, no external graphing service. Type expressions like <code>y=sin(x)*sqrt(x)</code> — reference a slider's letter directly in the expression. Drag the canvas to pan, scroll or pinch to zoom.</div>
+      </div>
+
+      <!-- CONVERT -->
+      <div class="mode-panel hidden" data-panel="convert">
+        <div class="field">
+          <label class="small">Category</label>
+          <select id="convCat"></select>
         </div>
-    </div><br><br><br><br><br>
+        <div class="two-col">
+          <div>
+            <label class="small">From</label>
+            <select id="convFrom"></select>
+            <input type="text" id="convVal" value="1" style="margin-top:8px;">
+          </div>
+          <div>
+            <label class="small">To</label>
+            <select id="convTo"></select>
+            <div style="margin-top:8px; background:#0A1220; border:1px solid var(--line); border-radius:6px; padding:9px 10px; color:var(--accent); font-weight:600;" id="convResult">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BASE / BITWISE -->
+      <div class="mode-panel hidden" data-panel="base">
+        <div class="field">
+          <label class="small">Decimal input</label>
+          <input type="text" id="baseInput" value="0">
+        </div>
+        <div class="stat-table" style="margin-bottom:12px;">
+          <table class="stat-table" style="width:100%;">
+            <tr><td>BIN</td><td id="baseBin">0</td></tr>
+            <tr><td>OCT</td><td id="baseOct">0</td></tr>
+            <tr><td>DEC</td><td id="baseDec">0</td></tr>
+            <tr><td>HEX</td><td id="baseHex">0</td></tr>
+          </table>
+        </div>
+        <label class="small">Bitwise — operand B</label>
+        <input type="text" id="baseB" value="0" style="margin-bottom:10px;">
+        <div class="row-tools">
+          <button data-bit="AND">AND</button>
+          <button data-bit="OR">OR</button>
+          <button data-bit="XOR">XOR</button>
+          <button data-bit="NOT">NOT A</button>
+          <button data-bit="SHL">A &lt;&lt; 1</button>
+          <button data-bit="SHR">A &gt;&gt; 1</button>
+        </div>
+        <div class="hint" id="bitResult">Result: —</div>
+      </div>
+
+    </div>
+
+    <!-- SIDEBAR -->
+    <div class="panel">
+      <div class="side-title">History <button id="clearHist">Clear</button></div>
+      <div class="hist-list" id="histList"><div class="hist-empty">No calculations yet</div></div>
+      <div class="mem-box">
+        <div class="mem-row"><span>Memory</span><b id="memVal">0</b></div>
+        <div class="row-tools">
+          <button id="mPlus">M+</button>
+          <button id="mMinus">M−</button>
+          <button id="mR">MR</button>
+          <button id="mC">MC</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>VANTA-9 &nbsp;·&nbsp; local computation only &nbsp;·&nbsp; no data leaves this session</footer>
+</div>
+
+<script>
+/* ================= CORE MATH ENGINE ================= */
+const mx = math.create(math.all, {});
+let angleMode = 'rad';
+function toRad(v){ return angleMode==='deg' ? v*Math.PI/180 : v; }
+function fromRad(v){ return angleMode==='deg' ? v*180/Math.PI : v; }
+mx.import({
+  sin:  x => typeof x==='number' ? Math.sin(toRad(x)) : math.sin(x),
+  cos:  x => typeof x==='number' ? Math.cos(toRad(x)) : math.cos(x),
+  tan:  x => typeof x==='number' ? Math.tan(toRad(x)) : math.tan(x),
+  asin: x => typeof x==='number' ? fromRad(Math.asin(x)) : math.asin(x),
+  acos: x => typeof x==='number' ? fromRad(Math.acos(x)) : math.acos(x),
+  atan: x => typeof x==='number' ? fromRad(Math.atan(x)) : math.atan(x),
+}, {override:true});
+
+let expr = '';
+let lastAnswer = 0;
+let memory = 0;
+let history = [];
+
+const curLine = document.getElementById('curLine');
+const prevLine = document.getElementById('prevLine');
+const errTag = document.getElementById('errTag');
+
+function renderExpr(){
+  curLine.value = expr === '' ? '0' : expr;
+}
+function insert(v){
+  expr += v;
+  errTag.textContent = '';
+  renderExpr();
+}
+function clearAll(){ expr=''; renderExpr(); prevLine.textContent='\u00A0'; errTag.textContent=''; }
+function delOne(){ expr = expr.slice(0,-1); renderExpr(); }
+
+function prettyExpr(e){
+  return e.replaceAll('×','*').replaceAll('÷','/').replaceAll('π','pi').replaceAll('√','sqrt')
+          .replace(/(\d+(\.\d+)?|\))!/g,'factorial($1)')
+          .replaceAll('^','^');
+}
+
+function evaluate(){
+  if(!expr){ return; }
+  try{
+    let clean = prettyExpr(expr);
+    clean = clean.replace(/(\d+(\.\d+)?|\))!/g,'factorial($1)');
+    const result = mx.evaluate(clean);
+    const val = (typeof result === 'number') ? mx.format(result, {precision:12}) : result.toString();
+    prevLine.textContent = expr + ' =';
+    lastAnswer = (typeof result === 'number') ? result : NaN;
+    expr = val;
+    renderExpr();
+    pushHistory(prevLine.textContent.replace(/ =$/,''), val);
+  }catch(err){
+    errTag.textContent = 'SYNTAX ERR';
+  }
+}
+
+function pushHistory(e,r){
+  history.unshift({e,r,t:Date.now()});
+  if(history.length>60) history.pop();
+  renderHistory();
+}
+function renderHistory(){
+  const el = document.getElementById('histList');
+  if(history.length===0){ el.innerHTML = '<div class="hist-empty">No calculations yet</div>'; return; }
+  el.innerHTML = history.map(h=>`<div class="hist-item" data-expr="${encodeURIComponent(h.r)}"><div class="h-expr">${h.e}</div><div class="h-res">${h.r}</div></div>`).join('');
+  el.querySelectorAll('.hist-item').forEach(it=>{
+    it.addEventListener('click',()=>{ expr = decodeURIComponent(it.dataset.expr); renderExpr(); });
+  });
+}
+document.getElementById('clearHist').addEventListener('click',()=>{ history=[]; renderHistory(); });
+
+/* memory */
+function refreshMemUI(){
+  document.getElementById('memVal').textContent = mx.format(memory,{precision:8});
+  document.getElementById('memTag').classList.toggle('hidden', memory===0);
+}
+document.getElementById('mPlus').addEventListener('click',()=>{ memory += Number(lastAnswerOrExpr()); refreshMemUI(); });
+document.getElementById('mMinus').addEventListener('click',()=>{ memory -= Number(lastAnswerOrExpr()); refreshMemUI(); });
+document.getElementById('mR').addEventListener('click',()=>{ insert(String(memory)); });
+document.getElementById('mC').addEventListener('click',()=>{ memory=0; refreshMemUI(); });
+function lastAnswerOrExpr(){
+  try{ return mx.evaluate(prettyExpr(expr||'0')); }catch(e){ return 0; }
+}
+
+/* ================= KEYPAD BUILD (merged standard+scientific) ================= */
+const sciKeys = [
+  ['(',''],[')',''],['π',''],['e',''],['n!',''],
+  ['sin','fn'],['cos','fn'],['tan','fn'],['ln','fn'],['log','fn'],
+  ['√','fn'],['x²','fn'],['x^y','fn'],['10^x','fn'],['e^x','fn'],
+  ['7',''],['8',''],['9',''],['÷','op'],['AC','warn'],
+  ['4',''],['5',''],['6',''],['×','op'],['DEL','warn'],
+  ['1',''],['2',''],['3',''],['-','op'],['%','op'],
+  ['0',''],['.',''],['Ans','fn'],['+','op'],['=','eq'],
+];
+const padSci = document.getElementById('padScientific');
+sciKeys.forEach(([label,cls])=>{
+  const b = document.createElement('button');
+  b.className = 'key '+cls;
+  b.textContent = label;
+  b.addEventListener('click',()=>handleSciKey(label));
+  padSci.appendChild(b);
+});
+
+let invMode = false;
+document.getElementById('degBtn').addEventListener('click',()=>{ angleMode='deg'; syncAngleUI(); });
+document.getElementById('radBtn').addEventListener('click',()=>{ angleMode='rad'; syncAngleUI(); });
+document.getElementById('invBtn').addEventListener('click',(e)=>{ invMode=!invMode; e.target.classList.toggle('toggleon',invMode); });
+function syncAngleUI(){
+  document.getElementById('degBtn').classList.toggle('on',angleMode==='deg');
+  document.getElementById('radBtn').classList.toggle('on',angleMode==='rad');
+  const tag = document.getElementById('angleTag');
+  tag.textContent = angleMode.toUpperCase();
+  tag.classList.remove('hidden');
+}
+syncAngleUI();
+
+function handleSciKey(label){
+  const fnName = invMode ? {sin:'asin',cos:'acos',tan:'atan'}[label] : label;
+  switch(label){
+    case 'AC': return clearAll();
+    case 'DEL': return delOne();
+    case '=': return evaluate();
+    case 'π': return insert('π');
+    case 'e': return insert('e');
+    case 'n!': return insert('!');
+    case '√': return insert('√(');
+    case 'x²': return insert('^2');
+    case 'x^y': return insert('^');
+    case '10^x': return insert('10^');
+    case 'e^x': return insert('e^');
+    case 'Ans': return insert(mx.format(lastAnswer,{precision:10}));
+    case 'sin': case 'cos': case 'tan':
+      return insert((fnName||label)+'(');
+    case 'ln': return insert('log(');
+    case 'log': return insert('log10(');
+    default: return insert(label);
+  }
+}
+
+/* keyboard support */
+document.addEventListener('keydown',(e)=>{
+  if(document.querySelector('[data-panel="calculator"]').classList.contains('hidden')) return;
+  if(/[0-9+\-*/.()]/.test(e.key)){ insert(e.key==='*'?'×':e.key==='/'?'÷':e.key); }
+  else if(e.key==='Enter'){ evaluate(); }
+  else if(e.key==='Backspace'){ delOne(); }
+  else if(e.key==='Escape'){ clearAll(); }
+});
+renderExpr();
+
+/* ================= PHYSICAL CONSTANTS LIBRARY ================= */
+const constants = [
+  ['Proton mass','1.6726219e-27'],
+  ['Neutron mass','1.6750e-27'],
+  ['Electron mass','9.10938356e-31'],
+  ['Muon mass','1.8835312e-28'],
+  ['Bohr Radius','5.291772108e-11'],
+  ['Planck constant','6.62607015e-34'],
+  ['Nuclear magneton','5.05078324e-27'],
+  ['Bohr magneton','9.2740100783e-24'],
+  ['Planck constant-rationalized','3.6260314e-34'],
+  ['Fine-Structure constant','7.2973525693e-3'],
+  ['Classical electron radius','2.8179403227e-15'],
+  ['Compton wavelength','2.426310238e-12'],
+  ['Proton gyromagnetic ratio','2.6750132e8'],
+  ['Proton Compton wavelength','2.426310238e-12'],
+  ['Neutron Compton wavelength','2.426310238e-12'],
+  ['Rydberg constant','1.097373e7'],
+  ['Atomic mass constant','1.66053906660e-27'],
+  ['Proton magnetic moment','1.4106047e-26'],
+  ['Electron magnetic moment','9.284764e-24'],
+  ['Neutron magnetic moment','-9.6629e-27'],
+  ['Muon magnetic moment','-4.490e-26'],
+  ['Faraday constant','9.649474e4'],
+  ['Elementary charge','1.602176634e-19'],
+  ['Avogadro constant','6.02214076e23'],
+  ['Boltzmann constant','1.380649e-23'],
+  ['Molar volume of ideal gas','2.242e-2'],
+  ['Molar gas constant','8.3145'],
+  ['Speed of light in vacuum','299792458'],
+  ['First radiation constant','3.74177e-16'],
+  ['Second radiation constant','1.438777e-2'],
+  ['Stefan-Boltzmann constant','5.670374419e-8'],
+  ['Electric constant','8.854187817e-12'],
+  ['Magnetic constant','1.256637061e-6'],
+  ['Magnetic flux quantum','2.067833831e-15'],
+  ['Standard acceleration due to gravity','9.80665'],
+  ['Conductance quantum','7.7480917e-5'],
+  ['Characteristic impedance of vacuum','376.730313461'],
+  ['Celsius temperature offset','273.15'],
+  ['Universal gravitational constant','6.67430e-11'],
+  ['Standard atmospheric pressure','101325'],
+];
+const constList = document.getElementById('constList');
+const constSearch = document.getElementById('constSearch');
+const constPanel = document.getElementById('constPanel');
+const constToggle = document.getElementById('constToggle');
+
+function renderConstants(filter=''){
+  const f = filter.trim().toLowerCase();
+  const rows = constants.filter(([name])=>name.toLowerCase().includes(f));
+  if(rows.length===0){ constList.innerHTML = '<div class="const-empty">No matches</div>'; return; }
+  constList.innerHTML = rows.map(([name,val])=>
+    `<div class="const-item" data-val="${val}"><span class="c-name">${name}</span><span class="c-val">${val}</span></div>`
+  ).join('');
+  constList.querySelectorAll('.const-item').forEach(item=>{
+    item.addEventListener('click',()=>{
+      insert(item.dataset.val);
+      closeConstPanel();
+    });
+  });
+}
+function openConstPanel(){
+  constPanel.classList.remove('hidden');
+  renderConstants(constSearch.value);
+  constSearch.focus();
+}
+function closeConstPanel(){
+  constPanel.classList.add('hidden');
+  constSearch.value='';
+}
+constToggle.addEventListener('click',(e)=>{
+  e.stopPropagation();
+  constPanel.classList.contains('hidden') ? openConstPanel() : closeConstPanel();
+});
+constSearch.addEventListener('input',()=>renderConstants(constSearch.value));
+constSearch.addEventListener('click',(e)=>e.stopPropagation());
+document.addEventListener('click',(e)=>{
+  if(!constPanel.contains(e.target) && e.target!==constToggle){ closeConstPanel(); }
+});
+renderConstants();
+
+/* ================= TABS ================= */
+document.querySelectorAll('nav.tabs button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const mode = btn.dataset.mode;
+    document.querySelectorAll('.mode-panel').forEach(p=>p.classList.add('hidden'));
+    document.querySelector(`[data-panel="${mode}"]`).classList.remove('hidden');
+    document.getElementById('calcDisplayWrap').classList.toggle('hidden', mode!=='calculator');
+    document.getElementById('modeStatus').innerHTML = '<b>Mode</b> ' + btn.textContent;
+    if(mode==='matrix') buildMatrixInputs();
+    if(mode==='graph') setTimeout(drawGraph, 0);
+  });
+});
+
+/* ================= STATISTICS ================= */
+let dataset = [];
+function renderStats(){
+  const chips = document.getElementById('statChips');
+  chips.innerHTML = dataset.map((v,i)=>`<div class="chip">${v}<button data-i="${i}">×</button></div>`).join('');
+  chips.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+    dataset.splice(Number(b.dataset.i),1); renderStats();
+  }));
+  const table = document.getElementById('statTable');
+  if(dataset.length===0){ table.innerHTML=''; return; }
+  const sorted = [...dataset].sort((a,b)=>a-b);
+  const n = dataset.length;
+  const sum = dataset.reduce((a,b)=>a+b,0);
+  const mean = sum/n;
+  const median = mx.median(dataset);
+  let modeVal;
+  try{ modeVal = mx.mode(dataset).join(', '); }catch(e){ modeVal='—'; }
+  const variance = n>1 ? mx.variance(dataset,'unbiased') : 0;
+  const stdev = n>1 ? mx.std(dataset,'unbiased') : 0;
+  const popStd = mx.std(dataset,'uncorrected');
+  const q1 = mx.quantileSeq(dataset,0.25);
+  const q3 = mx.quantileSeq(dataset,0.75);
+  const rows = [
+    ['Count', n],
+    ['Sum', mx.format(sum,{precision:10})],
+    ['Mean', mx.format(mean,{precision:10})],
+    ['Median', mx.format(median,{precision:10})],
+    ['Mode', modeVal],
+    ['Min', sorted[0]],
+    ['Max', sorted[n-1]],
+    ['Range', mx.format(sorted[n-1]-sorted[0],{precision:10})],
+    ['Q1', mx.format(q1,{precision:10})],
+    ['Q3', mx.format(q3,{precision:10})],
+    ['Variance (sample)', mx.format(variance,{precision:10})],
+    ['Std Dev (sample)', mx.format(stdev,{precision:10})],
+    ['Std Dev (population)', mx.format(popStd,{precision:10})],
+  ];
+  table.innerHTML = rows.map(([l,v])=>`<tr><td>${l}</td><td>${v}</td></tr>`).join('');
+}
+document.getElementById('statInput').addEventListener('keydown',(e)=>{
+  if(e.key==='Enter'){
+    const raw = e.target.value.trim();
+    if(!raw) return;
+    raw.split(/[,\s]+/).forEach(tok=>{
+      const v = Number(tok);
+      if(!isNaN(v) && tok!=='') dataset.push(v);
+    });
+    e.target.value='';
+    renderStats();
+  }
+});
+document.getElementById('statClear').addEventListener('click',()=>{ dataset=[]; renderStats(); });
+
+/* ================= MATRIX ================= */
+function buildMatrixInputs(){
+  buildOneMatrix('matA', Number(document.getElementById('matASize').value));
+  buildOneMatrix('matB', Number(document.getElementById('matBSize').value));
+}
+function buildOneMatrix(id, size){
+  const el = document.getElementById(id);
+  el.style.gridTemplateColumns = `repeat(${size},56px)`;
+  el.innerHTML = '';
+  for(let i=0;i<size*size;i++){
+    const inp = document.createElement('input');
+    inp.type='text'; inp.value = (i%(size+1)===0)?'1':'0';
+    inp.dataset.idx = i;
+    el.appendChild(inp);
+  }
+}
+function readMatrix(id, size){
+  const inputs = document.querySelectorAll(`#${id} input`);
+  const vals = Array.from(inputs).map(i=>Number(i.value)||0);
+  const rows=[];
+  for(let r=0;r<size;r++) rows.push(vals.slice(r*size,r*size+size));
+  return rows;
+}
+document.getElementById('matASize').addEventListener('change',buildMatrixInputs);
+document.getElementById('matBSize').addEventListener('change',buildMatrixInputs);
+buildMatrixInputs();
+
+function showMatrixResult(m){
+  const el = document.getElementById('matResult');
+  if(typeof m === 'number'){
+    el.style.gridTemplateColumns = '1fr';
+    el.innerHTML = `<div style="padding:8px 4px;">${mx.format(m,{precision:8})}</div>`;
+    return;
+  }
+  const cols = m[0].length;
+  el.style.gridTemplateColumns = `repeat(${cols}, 70px)`;
+  el.innerHTML = m.flat().map(v=>`<div style="padding:8px 4px; text-align:center; background:#0A1220; border:1px solid var(--line); border-radius:5px;">${mx.format(v,{precision:6})}</div>`).join('');
+}
+document.querySelectorAll('[data-op]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const sizeA = Number(document.getElementById('matASize').value);
+    const sizeB = Number(document.getElementById('matBSize').value);
+    const A = readMatrix('matA', sizeA);
+    const B = readMatrix('matB', sizeB);
+    try{
+      let r;
+      switch(btn.dataset.op){
+        case 'add': r = mx.add(A,B); break;
+        case 'sub': r = mx.subtract(A,B); break;
+        case 'mul': r = mx.multiply(A,B); break;
+        case 'detA': r = mx.det(A); break;
+        case 'detB': r = mx.det(B); break;
+        case 'invA': r = mx.inv(A); break;
+        case 'invB': r = mx.inv(B); break;
+        case 'transA': r = mx.transpose(A); break;
+        case 'transB': r = mx.transpose(B); break;
+      }
+      showMatrixResult(r);
+    }catch(err){
+      document.getElementById('matResult').innerHTML = `<div style="color:var(--warn); grid-column:1/-1;">Error: ${err.message}</div>`;
+    }
+  });
+});
+
+/* ================= GRAPH — self-built engine ================= */
+const gcanvas = document.getElementById('graphCanvas');
+const gctx = gcanvas.getContext('2d');
+let view = { xmin:-10, xmax:10, ymin:-6, ymax:6 };
+const palette = ['#3FE0D0','#C77DFF','#FF6B6B','#F0C93F','#6BAFFF','#7DFFB2'];
+let graphExprs = [{ id:1, text:'y=sin(x)*sqrt(x)', color:palette[0], visible:true }];
+let exprSeq = 2;
+let sliders = [];
+
+function fitGCanvas(){
+  const ratio = window.devicePixelRatio || 1;
+  const rect = gcanvas.getBoundingClientRect();
+  if(rect.width===0) return false;
+  gcanvas.width = rect.width*ratio; gcanvas.height = rect.height*ratio;
+  gctx.setTransform(ratio,0,0,ratio,0,0);
+  return true;
+}
+function niceNum(range, round){
+  const exp = Math.floor(Math.log10(range));
+  const frac = range / Math.pow(10,exp);
+  let niceFrac;
+  if(round){ niceFrac = frac<1.5?1:frac<3?2:frac<7?5:10; }
+  else{ niceFrac = frac<=1?1:frac<=2?2:frac<=5?5:10; }
+  return niceFrac * Math.pow(10,exp);
+}
+function fmtTick(v){
+  if(Math.abs(v)>=100000 || (Math.abs(v)<0.0001 && v!==0)) return v.toExponential(1);
+  return Number(v.toPrecision(6)).toString();
+}
+function drawGraph(){
+  if(!fitGCanvas()) return;
+  const w = gcanvas.clientWidth, h = gcanvas.clientHeight;
+  gctx.clearRect(0,0,w,h);
+  const { xmin, xmax, ymin, ymax } = view;
+  const toPx = x => (x-xmin)/(xmax-xmin)*w;
+  const toPy = y => h - (y-ymin)/(ymax-ymin)*h;
+
+  const xStep = niceNum((xmax-xmin)/8, true);
+  const yStep = niceNum((ymax-ymin)/6, true);
+  gctx.font = '10px JetBrains Mono, monospace';
+
+  for(let gx = Math.ceil(xmin/xStep)*xStep; gx<=xmax; gx+=xStep){
+    const px = toPx(gx);
+    const isZero = Math.abs(gx) < xStep*1e-6;
+    gctx.strokeStyle = isZero ? 'rgba(220,238,255,0.4)' : 'rgba(63,224,208,0.12)';
+    gctx.lineWidth = isZero ? 1.4 : 1;
+    gctx.beginPath(); gctx.moveTo(px,0); gctx.lineTo(px,h); gctx.stroke();
+    if(!isZero){ gctx.fillStyle='rgba(220,238,255,0.35)'; gctx.fillText(fmtTick(gx), px+3, h-4); }
+  }
+  for(let gy = Math.ceil(ymin/yStep)*yStep; gy<=ymax; gy+=yStep){
+    const py = toPy(gy);
+    const isZero = Math.abs(gy) < yStep*1e-6;
+    gctx.strokeStyle = isZero ? 'rgba(220,238,255,0.4)' : 'rgba(63,224,208,0.12)';
+    gctx.lineWidth = isZero ? 1.4 : 1;
+    gctx.beginPath(); gctx.moveTo(0,py); gctx.lineTo(w,py); gctx.stroke();
+    if(!isZero){ gctx.fillStyle='rgba(220,238,255,0.35)'; gctx.fillText(fmtTick(gy), 4, py-4); }
+  }
+
+  const scope = {};
+  sliders.forEach(s=>scope[s.name]=s.value);
+
+  graphExprs.filter(e=>e.visible).forEach(e=>{
+    const rhs = e.text.replace(/^\s*y\s*=/,'').trim();
+    if(!rhs) return;
+    let node;
+    try{ node = mx.compile(prettyExpr(rhs)); }catch(err){ return; }
+    gctx.strokeStyle = e.color; gctx.lineWidth = 2.4;
+    gctx.shadowColor = e.color; gctx.shadowBlur = 6;
+    gctx.beginPath();
+    let started = false;
+    const steps = Math.max(200, Math.floor(w));
+    for(let i=0;i<=steps;i++){
+      const x = xmin + (xmax-xmin)*i/steps;
+      let y;
+      try{ y = node.evaluate({...scope, x}); }catch(err){ y = NaN; }
+      if(typeof y!=='number' || !isFinite(y) || Math.abs(y) > (ymax-ymin)*50 + 1e6){ started=false; continue; }
+      const px = toPx(x), py = toPy(y);
+      if(!started){ gctx.moveTo(px,py); started=true; } else { gctx.lineTo(px,py); }
+    }
+    gctx.stroke();
+    gctx.shadowBlur = 0;
+  });
+}
+
+/* pan + zoom */
+let dragging=false, lastPx=0, lastPy=0, pinchDist=null;
+gcanvas.addEventListener('mousedown',(e)=>{ dragging=true; gcanvas.classList.add('dragging'); lastPx=e.offsetX; lastPy=e.offsetY; });
+window.addEventListener('mouseup',()=>{ dragging=false; gcanvas.classList.remove('dragging'); });
+gcanvas.addEventListener('mousemove',(e)=>{
+  const w=gcanvas.clientWidth, h=gcanvas.clientHeight;
+  const dataX = view.xmin + (e.offsetX/w)*(view.xmax-view.xmin);
+  const dataY = view.ymin + ((h-e.offsetY)/h)*(view.ymax-view.ymin);
+  document.getElementById('coordReadout').textContent = `(${dataX.toFixed(2)}, ${dataY.toFixed(2)})`;
+  if(dragging){
+    const dx = (e.offsetX-lastPx)/w*(view.xmax-view.xmin);
+    const dy = (e.offsetY-lastPy)/h*(view.ymax-view.ymin);
+    view.xmin -= dx; view.xmax -= dx; view.ymin += dy; view.ymax += dy;
+    lastPx=e.offsetX; lastPy=e.offsetY;
+    drawGraph();
+  }
+});
+gcanvas.addEventListener('wheel',(e)=>{
+  e.preventDefault();
+  zoomAt(e.offsetX, e.offsetY, e.deltaY>0 ? 1.12 : 0.89);
+},{passive:false});
+function zoomAt(px,py,factor){
+  const w=gcanvas.clientWidth, h=gcanvas.clientHeight;
+  const dataX = view.xmin + (px/w)*(view.xmax-view.xmin);
+  const dataY = view.ymin + ((h-py)/h)*(view.ymax-view.ymin);
+  view.xmin = dataX + (view.xmin-dataX)*factor;
+  view.xmax = dataX + (view.xmax-dataX)*factor;
+  view.ymin = dataY + (view.ymin-dataY)*factor;
+  view.ymax = dataY + (view.ymax-dataY)*factor;
+  drawGraph();
+}
+document.getElementById('zoomInBtn').addEventListener('click',()=>zoomAt(gcanvas.clientWidth/2,gcanvas.clientHeight/2,0.8));
+document.getElementById('zoomOutBtn').addEventListener('click',()=>zoomAt(gcanvas.clientWidth/2,gcanvas.clientHeight/2,1.25));
+document.getElementById('resetViewBtn').addEventListener('click',()=>{ view={xmin:-10,xmax:10,ymin:-6,ymax:6}; drawGraph(); });
+window.addEventListener('resize',()=>{ if(!document.querySelector('[data-panel="graph"]').classList.contains('hidden')) drawGraph(); });
+
+function touchDist(t){ return Math.hypot(t[0].clientX-t[1].clientX, t[0].clientY-t[1].clientY); }
+gcanvas.addEventListener('touchstart',(e)=>{
+  const rect = gcanvas.getBoundingClientRect();
+  if(e.touches.length===1){ dragging=true; lastPx=e.touches[0].clientX-rect.left; lastPy=e.touches[0].clientY-rect.top; }
+  else if(e.touches.length===2){ pinchDist = touchDist(e.touches); }
+},{passive:true});
+gcanvas.addEventListener('touchmove',(e)=>{
+  const rect = gcanvas.getBoundingClientRect();
+  const w=gcanvas.clientWidth, h=gcanvas.clientHeight;
+  if(e.touches.length===1 && dragging){
+    const px=e.touches[0].clientX-rect.left, py=e.touches[0].clientY-rect.top;
+    const dx=(px-lastPx)/w*(view.xmax-view.xmin);
+    const dy=(py-lastPy)/h*(view.ymax-view.ymin);
+    view.xmin-=dx; view.xmax-=dx; view.ymin+=dy; view.ymax+=dy;
+    lastPx=px; lastPy=py; drawGraph();
+  } else if(e.touches.length===2 && pinchDist){
+    const d = touchDist(e.touches);
+    zoomAt(w/2, h/2, pinchDist/d);
+    pinchDist = d;
+  }
+},{passive:true});
+gcanvas.addEventListener('touchend',()=>{ dragging=false; pinchDist=null; });
+
+/* expression list */
+function renderExprList(){
+  const el = document.getElementById('exprList');
+  el.innerHTML = graphExprs.map(e=>`
+    <div class="expr-row" data-id="${e.id}">
+      <div class="swatch" style="background:${e.color}" data-role="swatch"></div>
+      <input type="text" value="${e.text.replace(/"/g,'&quot;')}" data-role="text">
+      <button class="eye ${e.visible?'':'off'}" data-role="eye">${e.visible?'\u25CF':'\u25CB'}</button>
+      <button class="del" data-role="del">×</button>
+    </div>`).join('');
+  el.querySelectorAll('.expr-row').forEach(row=>{
+    const id = Number(row.dataset.id);
+    row.querySelector('[data-role="text"]').addEventListener('input',(ev)=>{
+      graphExprs.find(x=>x.id===id).text = ev.target.value; drawGraph();
+    });
+    row.querySelector('[data-role="eye"]').addEventListener('click',()=>{
+      const item = graphExprs.find(x=>x.id===id); item.visible = !item.visible; renderExprList(); drawGraph();
+    });
+    row.querySelector('[data-role="del"]').addEventListener('click',()=>{
+      graphExprs = graphExprs.filter(x=>x.id!==id); renderExprList(); drawGraph();
+    });
+    row.querySelector('[data-role="swatch"]').addEventListener('click',()=>{
+      const item = graphExprs.find(x=>x.id===id);
+      item.color = palette[(palette.indexOf(item.color)+1)%palette.length];
+      renderExprList(); drawGraph();
+    });
+  });
+}
+document.getElementById('addExprBtn').addEventListener('click',()=>{
+  graphExprs.push({ id:exprSeq++, text:'y=', color:palette[graphExprs.length%palette.length], visible:true });
+  renderExprList(); drawGraph();
+});
+renderExprList();
+
+/* sliders */
+function renderSliders(){
+  const el = document.getElementById('sliderList');
+  el.innerHTML = sliders.map((s,i)=>`
+    <div class="slider-row" data-i="${i}">
+      <div class="s-head">
+        <input type="text" value="${s.name}" data-role="name">
+        <span class="s-val" data-role="val">${s.value}</span>
+        <button class="del" data-role="del">×</button>
+      </div>
+      <input type="range" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.value}" data-role="range">
+      <div class="s-range">
+        <input type="text" value="${s.min}" data-role="min">
+        <input type="text" value="${s.max}" data-role="max">
+      </div>
+    </div>`).join('');
+  el.querySelectorAll('.slider-row').forEach(row=>{
+    const i = Number(row.dataset.i);
+    row.querySelector('[data-role="name"]').addEventListener('input',(ev)=>{ sliders[i].name = ev.target.value || 'a'; drawGraph(); });
+    row.querySelector('[data-role="range"]').addEventListener('input',(ev)=>{
+      sliders[i].value = Number(ev.target.value);
+      row.querySelector('[data-role="val"]').textContent = sliders[i].value;
+      drawGraph();
+    });
+    row.querySelector('[data-role="min"]').addEventListener('change',(ev)=>{ sliders[i].min = Number(ev.target.value)||-10; renderSliders(); });
+    row.querySelector('[data-role="max"]').addEventListener('change',(ev)=>{ sliders[i].max = Number(ev.target.value)||10; renderSliders(); });
+    row.querySelector('[data-role="del"]').addEventListener('click',()=>{ sliders.splice(i,1); renderSliders(); drawGraph(); });
+  });
+}
+document.getElementById('addSliderBtn').addEventListener('click',()=>{
+  const used = sliders.map(s=>s.name);
+  let code = 97, name = 'a';
+  while(used.includes(name)){ code++; name = String.fromCharCode(code); }
+  sliders.push({ name, value:1, min:-10, max:10, step:0.1 });
+  renderSliders(); drawGraph();
+});
+
+/* ================= UNIT CONVERSION ================= */
+const unitCategories = {
+  Length: ['mm','cm','m','km','in','ft','yd','mi','nmi'],
+  Mass: ['mg','g','kg','tonne','oz','lb','stone'],
+  Temperature: ['degC','degF','K'],
+  Time: ['ms','s','min','h','day','week','year'],
+  Speed: ['m/s','km/h','mi/h','knot'],
+  Data: ['b','kb','Mb','Gb','Tb'],
+  Area: ['mm2','cm2','m2','hectare','km2','acre','inch2','foot2'],
+  Volume: ['ml','l','m3','pt','gal','cup'],
+};
+const catSel = document.getElementById('convCat');
+Object.keys(unitCategories).forEach(c=>{
+  const o=document.createElement('option'); o.value=c; o.textContent=c; catSel.appendChild(o);
+});
+function fillUnitSelects(){
+  const list = unitCategories[catSel.value];
+  const from = document.getElementById('convFrom'), to = document.getElementById('convTo');
+  from.innerHTML = list.map(u=>`<option>${u}</option>`).join('');
+  to.innerHTML = list.map(u=>`<option>${u}</option>`).join('');
+  to.selectedIndex = Math.min(1,list.length-1);
+  runConvert();
+}
+function runConvert(){
+  const val = Number(document.getElementById('convVal').value)||0;
+  const from = document.getElementById('convFrom').value;
+  const to = document.getElementById('convTo').value;
+  try{
+    const res = mx.evaluate(`${val} ${from} to ${to}`);
+    document.getElementById('convResult').textContent = mx.format(res.toNumber ? res.toNumber(to) : res, {precision:10});
+  }catch(e){
+    document.getElementById('convResult').textContent = 'n/a';
+  }
+}
+catSel.addEventListener('change', fillUnitSelects);
+['convFrom','convTo','convVal'].forEach(id=>document.getElementById(id).addEventListener('input',runConvert));
+['convFrom','convTo'].forEach(id=>document.getElementById(id).addEventListener('change',runConvert));
+fillUnitSelects();
+
+/* ================= BASE / BITWISE ================= */
+function updateBaseDisplay(){
+  const dec = parseInt(document.getElementById('baseInput').value) || 0;
+  document.getElementById('baseBin').textContent = (dec>>>0).toString(2);
+  document.getElementById('baseOct').textContent = dec.toString(8);
+  document.getElementById('baseDec').textContent = dec;
+  document.getElementById('baseHex').textContent = dec.toString(16).toUpperCase();
+}
+document.getElementById('baseInput').addEventListener('input',updateBaseDisplay);
+updateBaseDisplay();
+document.querySelectorAll('[data-bit]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const a = parseInt(document.getElementById('baseInput').value)||0;
+    const b = parseInt(document.getElementById('baseB').value)||0;
+    let r;
+    switch(btn.dataset.bit){
+      case 'AND': r=a&b; break;
+      case 'OR': r=a|b; break;
+      case 'XOR': r=a^b; break;
+      case 'NOT': r=~a; break;
+      case 'SHL': r=a<<1; break;
+      case 'SHR': r=a>>1; break;
+    }
+    document.getElementById('bitResult').textContent = `Result: ${r}  (bin: ${(r>>>0).toString(2)}, hex: ${r.toString(16).toUpperCase()})`;
+  });
+});
+</script>
 </body>
 </html>
