@@ -272,6 +272,43 @@ input[type=text]:focus, input[type=number]:focus, select:focus, textarea:focus{ 
 canvas#graphCanvas{ width:100%; height:460px; background:#05090F; border:1px solid var(--line); border-radius:8px; display:block; cursor:grab; touch-action:none; }
 canvas#graphCanvas.dragging{ cursor:grabbing; }
 
+/* assistive math keypad */
+.mathpad{ margin-top:14px; display:grid; grid-template-columns:1fr 1fr auto; gap:12px; }
+@media (max-width:780px){ .mathpad{ grid-template-columns:1fr; } }
+.mp-col{ background:#0A121F; border:1px solid var(--line); border-radius:8px; padding:10px; }
+.mp-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+.mp-btn{
+  background:#101B29; border:1px solid var(--line); color:var(--text);
+  font-family:var(--mono); font-size:13px; padding:11px 4px; border-radius:7px; cursor:pointer;
+  transition:transform .06s ease, border-color .15s ease, background .15s ease;
+}
+.mp-btn:hover{ border-color:var(--line-strong); background:#132234; }
+.mp-btn:active{ transform:scale(0.94); }
+.mp-btn.op{ color:var(--accent); }
+.mp-btn.on{ color:var(--accent); border-color:var(--accent); background:rgba(63,224,208,0.1); }
+.mp-btn.disabled{ opacity:0.32; cursor:not-allowed; }
+.mp-letters{ display:none; flex-wrap:wrap; gap:6px; margin-top:8px; }
+.mp-letters.show{ display:flex; }
+.mp-letters .mp-btn{ width:30px; height:30px; padding:0; font-size:11px; }
+.mp-side{ display:flex; flex-direction:column; gap:8px; width:172px; position:relative; }
+@media (max-width:780px){ .mp-side{ width:100%; } }
+.mp-side .mp-btn{ width:100%; }
+.mp-arrowrow{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.mp-enter{
+  background:var(--accent); color:var(--void); font-weight:700; border:1px solid var(--accent);
+  padding:14px 4px; border-radius:7px; text-align:center; cursor:pointer; font-size:15px;
+  font-family:var(--mono);
+}
+.mp-enter:hover{ background:#5CEBDC; }
+.mp-dropwrap{ position:relative; }
+.mp-drop{
+  position:absolute; bottom:calc(100% + 8px); left:0; width:min(300px,80vw);
+  max-height:280px; background:#0A0F1A; border:1px solid var(--line-strong); border-radius:10px;
+  box-shadow:0 18px 40px rgba(0,0,0,0.55); z-index:50; overflow:hidden; display:flex; flex-direction:column;
+}
+.mp-drop input{ margin:8px; width:calc(100% - 16px); }
+.mp-drop .const-list{ padding:0 6px 8px; }
+
 /* history sidebar */
 .hist-list{ display:flex; flex-direction:column; gap:8px; max-height:520px; overflow-y:auto; padding-right:4px;}
 .hist-item{
@@ -448,6 +485,75 @@ footer{ text-align:center; color:var(--text-dim2); font-size:10px; margin-top:26
           </div>
         </div>
         <div class="hint">Built in-house, no external graphing service. Type expressions like <code>y=sin(x)*sqrt(x)</code> — reference a slider's letter directly in the expression. Drag the canvas to pan, scroll or pinch to zoom.</div>
+
+        <!-- ASSISTIVE MATH KEYPAD -->
+        <div class="mathpad">
+          <div class="mp-col">
+            <div class="mp-grid" id="mpSymbols">
+              <button class="mp-btn" data-mp="x">x</button>
+              <button class="mp-btn" data-mp="y">y</button>
+              <button class="mp-btn" data-mp="sq">a²</button>
+              <button class="mp-btn" data-mp="pow">a^b</button>
+              <button class="mp-btn" data-mp="(">(</button>
+              <button class="mp-btn" data-mp=")">)</button>
+              <button class="mp-btn" data-mp="<">&lt;</button>
+              <button class="mp-btn" data-mp=">">&gt;</button>
+              <button class="mp-btn" data-mp="abs">|a|</button>
+              <button class="mp-btn" data-mp=",">,</button>
+              <button class="mp-btn" data-mp="<=">≤</button>
+              <button class="mp-btn" data-mp=">=">≥</button>
+              <button class="mp-btn" id="mpAbcBtn">ABC</button>
+              <button class="mp-btn disabled" title="Voice input not available">🔊</button>
+              <button class="mp-btn" data-mp="sqrt">√</button>
+              <button class="mp-btn" data-mp="pi">π</button>
+            </div>
+            <div class="mp-letters" id="mpLetters"></div>
+          </div>
+
+          <div class="mp-col">
+            <div class="mp-grid">
+              <button class="mp-btn" data-mp="7">7</button>
+              <button class="mp-btn" data-mp="8">8</button>
+              <button class="mp-btn" data-mp="9">9</button>
+              <button class="mp-btn op" data-mp="/">÷</button>
+              <button class="mp-btn" data-mp="4">4</button>
+              <button class="mp-btn" data-mp="5">5</button>
+              <button class="mp-btn" data-mp="6">6</button>
+              <button class="mp-btn op" data-mp="*">×</button>
+              <button class="mp-btn" data-mp="1">1</button>
+              <button class="mp-btn" data-mp="2">2</button>
+              <button class="mp-btn" data-mp="3">3</button>
+              <button class="mp-btn op" data-mp="-">−</button>
+              <button class="mp-btn" data-mp="0">0</button>
+              <button class="mp-btn" data-mp=".">.</button>
+              <button class="mp-btn" data-mp="=">=</button>
+              <button class="mp-btn op" data-mp="+">+</button>
+            </div>
+          </div>
+
+          <div class="mp-side">
+            <div class="mp-dropwrap">
+              <button class="mp-btn" id="mpFuncBtn">functions</button>
+              <div class="mp-drop hidden" id="mpFuncDrop">
+                <input type="text" id="mpFuncSearch" placeholder="Search functions…">
+                <div class="const-list" id="mpFuncList"></div>
+              </div>
+            </div>
+            <div class="mp-arrowrow">
+              <button class="mp-btn" id="mpLeft">←</button>
+              <button class="mp-btn" id="mpRight">→</button>
+            </div>
+            <button class="mp-btn" id="mpBack">⌫</button>
+            <div class="mp-dropwrap">
+              <button class="mp-btn" id="mpConstBtn">⚛ constants</button>
+              <div class="mp-drop hidden" id="mpConstDrop">
+                <input type="text" id="mpConstSearch" placeholder="Search constants…">
+                <div class="const-list" id="mpConstList"></div>
+              </div>
+            </div>
+            <button class="mp-enter" id="mpEnter">↵</button>
+          </div>
+        </div>
       </div>
 
       <!-- CONVERT -->
@@ -1038,9 +1144,11 @@ function renderExprList(){
     </div>`).join('');
   el.querySelectorAll('.expr-row').forEach(row=>{
     const id = Number(row.dataset.id);
-    row.querySelector('[data-role="text"]').addEventListener('input',(ev)=>{
+    const textInput = row.querySelector('[data-role="text"]');
+    textInput.addEventListener('input',(ev)=>{
       graphExprs.find(x=>x.id===id).text = ev.target.value; drawGraph();
     });
+    ['focus','click','keyup'].forEach(evt=>textInput.addEventListener(evt,()=>trackField(textInput)));
     row.querySelector('[data-role="eye"]').addEventListener('click',()=>{
       const item = graphExprs.find(x=>x.id===id); item.visible = !item.visible; renderExprList(); drawGraph();
     });
@@ -1095,6 +1203,175 @@ document.getElementById('addSliderBtn').addEventListener('click',()=>{
   while(used.includes(name)){ code++; name = String.fromCharCode(code); }
   sliders.push({ name, value:1, min:-10, max:10, step:0.1 });
   renderSliders(); drawGraph();
+});
+
+/* ----- assistive math keypad ----- */
+let activeField = null;
+function trackField(el){
+  activeField = { el, start: el.selectionStart, end: el.selectionEnd };
+}
+function firstExprInput(){
+  return document.querySelector('#exprList .expr-row input[data-role="text"]');
+}
+function mpUpdateModel(el){
+  const row = el.closest('.expr-row');
+  if(!row) return;
+  const item = graphExprs.find(x=>x.id===Number(row.dataset.id));
+  if(item){ item.text = el.value; drawGraph(); }
+}
+function mpInsert(text){
+  if(!activeField || !document.body.contains(activeField.el)){
+    const first = firstExprInput();
+    if(!first) return;
+    activeField = { el:first, start:first.value.length, end:first.value.length };
+  }
+  const el = activeField.el;
+  const start = activeField.start ?? el.value.length;
+  const end = activeField.end ?? start;
+  const val = el.value;
+  el.value = val.slice(0,start) + text + val.slice(end);
+  const pos = start + text.length;
+  el.focus();
+  el.setSelectionRange(pos,pos);
+  activeField = { el, start:pos, end:pos };
+  mpUpdateModel(el);
+}
+function mpMove(dir){
+  if(!activeField || !document.body.contains(activeField.el)) return;
+  const el = activeField.el;
+  const cur = activeField.start ?? el.value.length;
+  const pos = Math.max(0, Math.min(el.value.length, cur + dir));
+  el.focus();
+  el.setSelectionRange(pos,pos);
+  activeField = { el, start:pos, end:pos };
+}
+function mpBackspace(){
+  if(!activeField || !document.body.contains(activeField.el)){
+    const first = firstExprInput();
+    if(!first) return;
+    activeField = { el:first, start:first.value.length, end:first.value.length };
+  }
+  const el = activeField.el;
+  const start = activeField.start ?? el.value.length;
+  const end = activeField.end ?? start;
+  const val = el.value;
+  let newVal, pos;
+  if(start !== end){ newVal = val.slice(0,start)+val.slice(end); pos = start; }
+  else if(start > 0){ newVal = val.slice(0,start-1)+val.slice(start); pos = start-1; }
+  else { return; }
+  el.value = newVal;
+  el.focus();
+  el.setSelectionRange(pos,pos);
+  activeField = { el, start:pos, end:pos };
+  mpUpdateModel(el);
+}
+document.getElementById('mpSymbols').querySelectorAll('[data-mp]').forEach(btn=>{
+  btn.addEventListener('mousedown',(e)=>e.preventDefault());
+  btn.addEventListener('click',()=>{
+    const k = btn.dataset.mp;
+    switch(k){
+      case 'sq': return mpInsert('^2');
+      case 'pow': return mpInsert('^');
+      case 'abs': { mpInsert('abs()'); return mpMove(-1); }
+      case 'sqrt': return mpInsert('sqrt(');
+      case 'pi': return mpInsert('pi');
+      default: return mpInsert(k);
+    }
+  });
+});
+document.querySelectorAll('.mp-col:nth-child(2) [data-mp]').forEach(btn=>{
+  btn.addEventListener('mousedown',(e)=>e.preventDefault());
+  btn.addEventListener('click',()=>mpInsert(btn.dataset.mp));
+});
+
+/* ABC letter strip */
+const mpLetters = document.getElementById('mpLetters');
+'abcdefghijklmnopqrstuvwxyz'.split('').forEach(l=>{
+  const b = document.createElement('button');
+  b.className='mp-btn'; b.textContent=l;
+  b.addEventListener('mousedown',(e)=>e.preventDefault());
+  b.addEventListener('click',()=>mpInsert(l));
+  mpLetters.appendChild(b);
+});
+document.getElementById('mpAbcBtn').addEventListener('click',(e)=>{
+  mpLetters.classList.toggle('show');
+  e.target.classList.toggle('on');
+});
+
+/* arrows + backspace + enter */
+document.getElementById('mpLeft').addEventListener('click',()=>mpMove(-1));
+document.getElementById('mpRight').addEventListener('click',()=>mpMove(1));
+document.getElementById('mpBack').addEventListener('mousedown',(e)=>e.preventDefault());
+document.getElementById('mpBack').addEventListener('click',mpBackspace);
+document.getElementById('mpEnter').addEventListener('click',()=>{
+  const rows = Array.from(document.querySelectorAll('#exprList .expr-row input[data-role="text"]'));
+  const idx = activeField ? rows.indexOf(activeField.el) : -1;
+  if(idx > -1 && idx < rows.length-1){
+    rows[idx+1].focus();
+    trackField(rows[idx+1]);
+  } else {
+    document.getElementById('addExprBtn').click();
+    const newRows = document.querySelectorAll('#exprList .expr-row input[data-role="text"]');
+    const last = newRows[newRows.length-1];
+    if(last){ last.focus(); trackField(last); }
+  }
+});
+
+/* functions dropdown */
+const funcDefs = [
+  ['sin','sin('],['cos','cos('],['tan','tan('],
+  ['asin','asin('],['acos','acos('],['atan','atan('],
+  ['sinh','sinh('],['cosh','cosh('],['tanh','tanh('],
+  ['ln','log('],['log₁₀','log10('],['exp','exp('],
+  ['sqrt','sqrt('],['abs','abs('],['floor','floor('],
+  ['ceil','ceil('],['round','round('],['min','min('],
+  ['max','max('],['mod','mod('],['n!','factorial('],
+  ['sign','sign('],['gcd','gcd('],['lcm','lcm('],
+];
+function renderMpFuncs(filter=''){
+  const f = filter.trim().toLowerCase();
+  const rows = funcDefs.filter(([name])=>name.toLowerCase().includes(f));
+  const list = document.getElementById('mpFuncList');
+  if(rows.length===0){ list.innerHTML = '<div class="const-empty">No matches</div>'; return; }
+  list.innerHTML = rows.map(([name,val])=>`<div class="const-item" data-val="${val}"><span class="c-name">${name}</span></div>`).join('');
+  list.querySelectorAll('.const-item').forEach(item=>{
+    item.addEventListener('click',()=>{ mpInsert(item.dataset.val); closeMpDrops(); });
+  });
+}
+function renderMpConsts(filter=''){
+  const f = filter.trim().toLowerCase();
+  const rows = constants.filter(([name])=>name.toLowerCase().includes(f));
+  const list = document.getElementById('mpConstList');
+  if(rows.length===0){ list.innerHTML = '<div class="const-empty">No matches</div>'; return; }
+  list.innerHTML = rows.map(([name,val])=>
+    `<div class="const-item" data-val="${val}"><span class="c-name">${name}</span><span class="c-val">${val}</span></div>`
+  ).join('');
+  list.querySelectorAll('.const-item').forEach(item=>{
+    item.addEventListener('click',()=>{ mpInsert(item.dataset.val); closeMpDrops(); });
+  });
+}
+function closeMpDrops(){
+  document.getElementById('mpFuncDrop').classList.add('hidden');
+  document.getElementById('mpConstDrop').classList.add('hidden');
+}
+document.getElementById('mpFuncBtn').addEventListener('click',(e)=>{
+  e.stopPropagation();
+  const drop = document.getElementById('mpFuncDrop');
+  const willOpen = drop.classList.contains('hidden');
+  closeMpDrops();
+  if(willOpen){ drop.classList.remove('hidden'); renderMpFuncs(); document.getElementById('mpFuncSearch').focus(); }
+});
+document.getElementById('mpConstBtn').addEventListener('click',(e)=>{
+  e.stopPropagation();
+  const drop = document.getElementById('mpConstDrop');
+  const willOpen = drop.classList.contains('hidden');
+  closeMpDrops();
+  if(willOpen){ drop.classList.remove('hidden'); renderMpConsts(); document.getElementById('mpConstSearch').focus(); }
+});
+document.getElementById('mpFuncSearch').addEventListener('input',(e)=>renderMpFuncs(e.target.value));
+document.getElementById('mpConstSearch').addEventListener('input',(e)=>renderMpConsts(e.target.value));
+document.addEventListener('click',(e)=>{
+  if(!e.target.closest('.mp-dropwrap')) closeMpDrops();
 });
 
 /* ================= UNIT CONVERSION ================= */
