@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VANTA // Matrix</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="matrix.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.1/math.min.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="brand-mark pulse">V9</div>
+      <div>
+        <h1>VANTA <span style="color:var(--accent2)">//</span> Compute Console</h1>
+        <p>Multi-domain analytical instrument</p>
+      </div>
+    </div>
+    <div class="status">
+      <div><span class="dot pulse"></span><b>Core</b> Online</div>
+      <div><b>Mode</b> Matrix</div>
+      <div><b>Precision</b> f64</div>
+    </div>
+  </header>
+  <nav class="tabs">
+        <a href="index.html">Standard</a>
+        <a href="stats.html">Statistics</a>
+        <a href="matrix.html" class="active">Matrix</a>
+        <a href="graph.html">Graph</a>
+        <a href="3d.html">3D</a>
+        <a href="units.html">Units</a>
+        <a href="base.html">Base / Bitwise</a>
+  </nav>
+
+  <div class="grid">
+    <div class="panel">
+      <div class="two-col">
+        <div>
+          <label class="small">Matrix A — size</label>
+          <select id="matASize"><option>2</option><option>3</option><option selected>2</option></select>
+        </div>
+        <div>
+          <label class="small">Matrix B — size</label>
+          <select id="matBSize"><option>2</option><option>3</option><option selected>2</option></select>
+        </div>
+      </div>
+      <div class="two-col" style="margin-top:10px;">
+        <div><div id="matA" class="matrix-grid"></div></div>
+        <div><div id="matB" class="matrix-grid"></div></div>
+      </div>
+      <div class="row-tools" style="margin-top:6px;">
+        <button data-op="add">A + B</button>
+        <button data-op="sub">A − B</button>
+        <button data-op="mul">A × B</button>
+        <button data-op="detA">det(A)</button>
+        <button data-op="detB">det(B)</button>
+        <button data-op="invA">A⁻¹</button>
+        <button data-op="invB">B⁻¹</button>
+        <button data-op="transA">Aᵀ</button>
+        <button data-op="transB">Bᵀ</button>
+      </div>
+      <label class="small" style="margin-top:10px;">Result</label>
+      <div id="matResult" class="matrix-grid" style="color:var(--accent);"></div>
+    </div>
+
+    <div class="panel">
+      <div class="side-title">History <button id="clearHist">Clear</button></div>
+      <div class="hist-list" id="histList"><div class="hist-empty">No calculations yet</div></div>
+      <div class="mem-box">
+        <div class="mem-row"><span>Memory</span><b id="memVal">0</b></div>
+        <div class="row-tools">
+          <button id="mPlus">M+</button>
+          <button id="mMinus">M−</button>
+          <button id="mR">MR</button>
+          <button id="mC">MC</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>VANTA-9 &nbsp;·&nbsp; local computation only &nbsp;·&nbsp; no data leaves this session</footer>
+</div>
+
+<script src="matrix.js"></script>
+</body>
+</html>

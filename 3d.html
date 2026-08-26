@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VANTA // 3D Plotter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="3d.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.1/math.min.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="brand-mark pulse">V9</div>
+      <div>
+        <h1>VANTA <span style="color:var(--accent2)">//</span> Compute Console</h1>
+        <p>Multi-domain analytical instrument</p>
+      </div>
+    </div>
+    <div class="status">
+      <div><span class="dot pulse"></span><b>Core</b> Online</div>
+      <div><b>Mode</b> 3D</div>
+      <div><b>Precision</b> f64</div>
+    </div>
+  </header>
+  <nav class="tabs">
+        <a href="index.html">Standard</a>
+        <a href="stats.html">Statistics</a>
+        <a href="matrix.html">Matrix</a>
+        <a href="graph.html">Graph</a>
+        <a href="3d.html" class="active">3D</a>
+        <a href="units.html">Units</a>
+        <a href="base.html">Base / Bitwise</a>
+  </nav>
+
+  <div class="grid">
+    <div class="panel">
+
+        <div class="graph-shell">
+          <div class="graph-sidebar">
+            <div class="side-label">Surfaces z = f(x,y)</div>
+            <div id="exprList3d"></div>
+            <button class="ghost-add" id="addExpr3dBtn">+ Add surface</button>
+            <div class="side-label">Domain</div>
+            <div class="two-col" style="margin-bottom:8px;">
+              <div><label class="small">X min</label><input type="text" id="d3xmin" value="-4"></div>
+              <div><label class="small">X max</label><input type="text" id="d3xmax" value="4"></div>
+            </div>
+            <div class="two-col" style="margin-bottom:10px;">
+              <div><label class="small">Y min</label><input type="text" id="d3ymin" value="-4"></div>
+              <div><label class="small">Y max</label><input type="text" id="d3ymax" value="4"></div>
+            </div>
+            <div style="margin-bottom:14px;">
+              <label class="small">Mesh resolution</label>
+              <input type="range" id="d3res" min="10" max="60" value="24" style="width:100%;">
+            </div>
+            <div class="side-label">Sliders</div>
+            <div id="sliderList3d"></div>
+            <button class="ghost-add" id="addSlider3dBtn">+ Add slider</button>
+          </div>
+          <div class="graph-stage">
+            <div class="graph-toolbar">
+              <button id="zoomIn3dBtn" title="Zoom in">+</button>
+              <button id="zoomOut3dBtn" title="Zoom out">−</button>
+              <button id="resetView3dBtn" title="Reset view">⟲</button>
+              <span class="coord-readout">drag to orbit · scroll to zoom</span>
+            </div>
+            <canvas id="graphCanvas3d"></canvas>
+          </div>
+        </div>
+        <div class="hint">Rendered with an in-house perspective projection, rotation matrices, and painter's-algorithm depth sorting — no external 3D engine. Surface color follows each expression's swatch, shaded by a simple directional light. Drag to orbit, scroll or pinch to zoom.</div>
+    </div>
+
+    <div class="panel">
+      <div class="side-title">History <button id="clearHist">Clear</button></div>
+      <div class="hist-list" id="histList"><div class="hist-empty">No calculations yet</div></div>
+      <div class="mem-box">
+        <div class="mem-row"><span>Memory</span><b id="memVal">0</b></div>
+        <div class="row-tools">
+          <button id="mPlus">M+</button>
+          <button id="mMinus">M−</button>
+          <button id="mR">MR</button>
+          <button id="mC">MC</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>VANTA-9 &nbsp;·&nbsp; local computation only &nbsp;·&nbsp; no data leaves this session</footer>
+</div>
+
+<script src="3d.js"></script>
+</body>
+</html>

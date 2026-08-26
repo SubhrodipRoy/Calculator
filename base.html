@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VANTA // Base &amp; Bitwise</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="base.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.1/math.min.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="brand-mark pulse">V9</div>
+      <div>
+        <h1>VANTA <span style="color:var(--accent2)">//</span> Compute Console</h1>
+        <p>Multi-domain analytical instrument</p>
+      </div>
+    </div>
+    <div class="status">
+      <div><span class="dot pulse"></span><b>Core</b> Online</div>
+      <div><b>Mode</b> Base / Bitwise</div>
+      <div><b>Precision</b> f64</div>
+    </div>
+  </header>
+  <nav class="tabs">
+        <a href="index.html">Standard</a>
+        <a href="stats.html">Statistics</a>
+        <a href="matrix.html">Matrix</a>
+        <a href="graph.html">Graph</a>
+        <a href="3d.html">3D</a>
+        <a href="units.html">Units</a>
+        <a href="base.html" class="active">Base / Bitwise</a>
+  </nav>
+
+  <div class="grid">
+    <div class="panel">
+      <div class="field">
+        <label class="small">Decimal input</label>
+        <input type="text" id="baseInput" value="0">
+      </div>
+      <div class="stat-table" style="margin-bottom:12px;">
+        <table class="stat-table" style="width:100%;">
+          <tr><td>BIN</td><td id="baseBin">0</td></tr>
+          <tr><td>OCT</td><td id="baseOct">0</td></tr>
+          <tr><td>DEC</td><td id="baseDec">0</td></tr>
+          <tr><td>HEX</td><td id="baseHex">0</td></tr>
+        </table>
+      </div>
+      <label class="small">Bitwise — operand B</label>
+      <input type="text" id="baseB" value="0" style="margin-bottom:10px;">
+      <div class="row-tools">
+        <button data-bit="AND">AND</button>
+        <button data-bit="OR">OR</button>
+        <button data-bit="XOR">XOR</button>
+        <button data-bit="NOT">NOT A</button>
+        <button data-bit="SHL">A &lt;&lt; 1</button>
+        <button data-bit="SHR">A &gt;&gt; 1</button>
+      </div>
+      <div class="hint" id="bitResult">Result: —</div>
+    </div>
+
+    <div class="panel">
+      <div class="side-title">History <button id="clearHist">Clear</button></div>
+      <div class="hist-list" id="histList"><div class="hist-empty">No calculations yet</div></div>
+      <div class="mem-box">
+        <div class="mem-row"><span>Memory</span><b id="memVal">0</b></div>
+        <div class="row-tools">
+          <button id="mPlus">M+</button>
+          <button id="mMinus">M−</button>
+          <button id="mR">MR</button>
+          <button id="mC">MC</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>VANTA-9 &nbsp;·&nbsp; local computation only &nbsp;·&nbsp; no data leaves this session</footer>
+</div>
+
+<script src="base.js"></script>
+</body>
+</html>

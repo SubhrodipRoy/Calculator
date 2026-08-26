@@ -3,10 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VANTA // Compute Console</title>
+<title>VANTA // Standard Calculator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.1/math.min.js"></script>
 <style>
 :root{
   --void:#060A12;
@@ -97,11 +96,11 @@ header.top{
   display:inline-block; width:6px; height:6px; border-radius:50%;
   background:var(--accent); margin-right:6px; box-shadow:0 0 8px var(--accent);
 }
-
 nav.tabs{
   display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px;
 }
-nav.tabs button{
+nav.tabs a{
+  text-decoration:none; display:inline-block;
   background:var(--panel);
   border:1px solid var(--line);
   color:var(--text-dim);
@@ -109,13 +108,12 @@ nav.tabs button{
   padding:9px 14px; border-radius:7px; cursor:pointer;
   transition:all .15s ease;
 }
-nav.tabs button:hover{ color:var(--text); border-color:var(--line-strong); }
-nav.tabs button.active{
+nav.tabs a:hover{ color:var(--text); border-color:var(--line-strong); }
+nav.tabs a.active{
   color:var(--void); background:var(--accent); border-color:var(--accent);
   box-shadow:0 0 16px rgba(63,224,208,0.35);
   font-weight:700;
 }
-
 .grid{
   display:grid;
   grid-template-columns: 1fr 300px;
@@ -125,7 +123,6 @@ nav.tabs button.active{
 @media (max-width: 880px){
   .grid{ grid-template-columns: 1fr; }
 }
-
 .panel{
   background:linear-gradient(180deg, var(--panel), var(--panel-2));
   border:1px solid var(--line);
@@ -143,8 +140,48 @@ nav.tabs button.active{
   border-top:none; border-left:none;
   border-bottom:1px solid var(--accent-dim); border-right:1px solid var(--accent-dim);
 }
+label.small{ font-size:10px; color:var(--text-dim); letter-spacing:1px; text-transform:uppercase; display:block; margin-bottom:6px; }
+input[type=text], input[type=number], select, textarea{
+  width:100%; background:#0A1220; border:1px solid var(--line); color:var(--text);
+  font-family:var(--mono); font-size:13px; padding:9px 10px; border-radius:6px; outline:none;
+}
+input[type=text]:focus, input[type=number]:focus, select:focus, textarea:focus{ border-color:var(--accent); }
+.field{ margin-bottom:12px; }
+.two-col{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.three-col{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+.row-tools{
+  display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;
+  position:relative;
+}
+.row-tools button{
+  background:var(--panel-2); border:1px solid var(--line); color:var(--text-dim);
+  font-family:var(--mono); font-size:11px; padding:7px 10px; border-radius:6px; cursor:pointer;
+  letter-spacing:0.5px;
+}
+.row-tools button:hover{ color:var(--text); border-color:var(--line-strong); }
+.row-tools button.on{ color:var(--accent); border-color:var(--accent); background:rgba(63,224,208,0.08); }
+.hist-list{ display:flex; flex-direction:column; gap:8px; max-height:520px; overflow-y:auto; padding-right:4px;}
+.hist-item{
+  background:#0A121F; border:1px solid var(--line); border-radius:7px; padding:8px 10px; cursor:pointer;
+}
+.hist-item:hover{ border-color:var(--line-strong); }
+.hist-item .h-expr{ font-size:11px; color:var(--text-dim); word-break:break-all;}
+.hist-item .h-res{ font-size:14px; color:var(--accent); font-weight:600; margin-top:2px;}
+.hist-empty{ color:var(--text-dim2); font-size:12px; text-align:center; padding:30px 0; }
+.side-title{ font-family:var(--display); font-size:13px; letter-spacing:1px; text-transform:uppercase; color:var(--text); margin:0 0 10px; display:flex; justify-content:space-between; align-items:center;}
+.side-title button{ background:none; border:1px solid var(--line); color:var(--text-dim); font-size:10px; padding:4px 8px; border-radius:5px; cursor:pointer; font-family:var(--mono); }
+.mem-box{ margin-top:16px; padding-top:14px; border-top:1px solid var(--line); }
+.mem-row{ display:flex; justify-content:space-between; font-size:11px; color:var(--text-dim); margin-bottom:6px; }
+.mem-row b{ color:var(--accent2); }
+.hidden{ display:none !important; }
+.hint{ font-size:11px; color:var(--text-dim2); margin-top:8px; line-height:1.5; }
+footer{ text-align:center; color:var(--text-dim2); font-size:10px; margin-top:26px; letter-spacing:1px; }
+.stat-table{ width:100%; border-collapse:collapse; font-size:12px; margin-top:12px;}
+.stat-table td{ padding:7px 8px; border-bottom:1px solid var(--line); }
+.stat-table td:first-child{ color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px; font-size:10px;}
+.stat-table td:last-child{ text-align:right; color:var(--accent); font-weight:600;}
 
-/* DISPLAY */
+/* display + keypad */
 .display{
   background:#05090F;
   border:1px solid var(--line);
@@ -181,9 +218,8 @@ nav.tabs button.active{
   .scan{ animation: scanmove 4s linear infinite; }
 }
 @keyframes scanmove{ 0%{top:0;} 100%{top:100%;} }
-
-/* KEYPADS */
 .pad{ display:grid; gap:8px; }
+.pad.std{ grid-template-columns: repeat(4,1fr); }
 .pad.sci{ grid-template-columns: repeat(5,1fr); }
 button.key{
   background:#101B29; border:1px solid var(--line);
@@ -198,137 +234,11 @@ button.key.fn{ color:var(--accent2); font-size:12px; }
 button.key.eq{ background:var(--accent); color:var(--void); border-color:var(--accent); font-weight:700; }
 button.key.eq:hover{ background:#5CEBDC; }
 button.key.warn{ color:var(--warn); }
+button.key.wide{ grid-column: span 2; }
 button.key.ghost{ background:transparent; color:var(--text-dim); }
 button.key.toggleon{ background:rgba(63,224,208,0.15); border-color:var(--accent); color:var(--accent); }
 
-.row-tools{
-  display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;
-  position:relative;
-}
-.row-tools button{
-  background:var(--panel-2); border:1px solid var(--line); color:var(--text-dim);
-  font-family:var(--mono); font-size:11px; padding:7px 10px; border-radius:6px; cursor:pointer;
-  letter-spacing:0.5px;
-}
-.row-tools button:hover{ color:var(--text); border-color:var(--line-strong); }
-.row-tools button.on{ color:var(--accent); border-color:var(--accent); background:rgba(63,224,208,0.08); }
-
-label.small{ font-size:10px; color:var(--text-dim); letter-spacing:1px; text-transform:uppercase; display:block; margin-bottom:6px; }
-input[type=text], input[type=number], select, textarea{
-  width:100%; background:#0A1220; border:1px solid var(--line); color:var(--text);
-  font-family:var(--mono); font-size:13px; padding:9px 10px; border-radius:6px; outline:none;
-}
-input[type=text]:focus, input[type=number]:focus, select:focus, textarea:focus{ border-color:var(--accent); }
-.field{ margin-bottom:12px; }
-.two-col{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-.three-col{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
-
-/* results table */
-.stat-table{ width:100%; border-collapse:collapse; font-size:12px; margin-top:12px;}
-.stat-table td{ padding:7px 8px; border-bottom:1px solid var(--line); }
-.stat-table td:first-child{ color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px; font-size:10px;}
-.stat-table td:last-child{ text-align:right; color:var(--accent); font-weight:600;}
-
-.chips{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; min-height:30px; }
-.chip{
-  background:#101B29; border:1px solid var(--line); padding:5px 9px; border-radius:20px;
-  font-size:12px; display:flex; align-items:center; gap:6px;
-}
-.chip button{ background:none; border:none; color:var(--warn); cursor:pointer; font-size:12px; line-height:1;}
-
-/* matrix grid */
-.matrix-grid{ display:inline-grid; gap:5px; margin-bottom:8px; }
-.matrix-grid input{ width:56px; text-align:center; padding:6px 4px; }
-
-/* custom graph engine */
-.graph-shell{ display:grid; grid-template-columns:230px 1fr; gap:12px; }
-@media (max-width:700px){ .graph-shell{ grid-template-columns:1fr; } }
-.graph-sidebar{
-  background:#0A121F; border:1px solid var(--line); border-radius:8px;
-  padding:10px; max-height:520px; overflow-y:auto;
-}
-.side-label{ font-size:10px; color:var(--text-dim); letter-spacing:1px; text-transform:uppercase; margin:2px 0 8px; }
-.expr-row{ display:flex; align-items:center; gap:6px; margin-bottom:6px; }
-.expr-row .swatch{ width:16px;height:16px;border-radius:4px;flex:none;cursor:pointer;border:1px solid rgba(255,255,255,0.25); }
-.expr-row input[type=text]{ flex:1; padding:6px 7px; font-size:11px; }
-.expr-row button{ background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:13px;flex:none;padding:2px; }
-.expr-row button.eye.off{ color:var(--text-dim2); }
-.expr-row button.del:hover{ color:var(--warn); }
-.ghost-add{ width:100%; text-align:left; border:1px dashed var(--line); margin-bottom:14px; font-size:11px; padding:8px; border-radius:6px; background:transparent; color:var(--text-dim); cursor:pointer; font-family:var(--mono); }
-.ghost-add:hover{ color:var(--text); border-color:var(--line-strong); }
-.slider-row{ margin-bottom:10px; background:#0D1826; border:1px solid var(--line); border-radius:6px; padding:8px; }
-.slider-row .s-head{ display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:6px; font-size:11px; }
-.slider-row .s-head input[type=text]{ width:40px; padding:4px 5px; font-size:11px; text-align:center; }
-.slider-row .s-val{ color:var(--accent); font-size:11px; flex:1; text-align:center; }
-.slider-row input[type=range]{ width:100%; accent-color:var(--accent); }
-.slider-row .s-range{ display:flex; gap:6px; margin-top:6px; }
-.slider-row .s-range input{ padding:4px 5px; font-size:10px; }
-.slider-row button.del{ background:none;border:none;color:var(--warn);cursor:pointer;font-size:12px;flex:none; }
-.graph-stage{ position:relative; }
-.graph-toolbar{ display:flex; align-items:center; gap:6px; margin-bottom:8px; }
-.graph-toolbar button{ background:var(--panel-2); border:1px solid var(--line); color:var(--text-dim); width:28px;height:28px;border-radius:6px;cursor:pointer; font-family:var(--mono); font-size:14px; }
-.graph-toolbar button:hover{ color:var(--text); border-color:var(--line-strong); }
-.coord-readout{ margin-left:auto; font-size:11px; color:var(--text-dim); }
-canvas#graphCanvas{ width:100%; height:460px; background:#05090F; border:1px solid var(--line); border-radius:8px; display:block; cursor:grab; touch-action:none; }
-canvas#graphCanvas.dragging{ cursor:grabbing; }
-
-/* assistive math keypad */
-.mathpad{ margin-top:14px; display:grid; grid-template-columns:1fr 1fr auto; gap:12px; }
-@media (max-width:780px){ .mathpad{ grid-template-columns:1fr; } }
-.mp-col{ background:#0A121F; border:1px solid var(--line); border-radius:8px; padding:10px; }
-.mp-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
-.mp-btn{
-  background:#101B29; border:1px solid var(--line); color:var(--text);
-  font-family:var(--mono); font-size:13px; padding:11px 4px; border-radius:7px; cursor:pointer;
-  transition:transform .06s ease, border-color .15s ease, background .15s ease;
-}
-.mp-btn:hover{ border-color:var(--line-strong); background:#132234; }
-.mp-btn:active{ transform:scale(0.94); }
-.mp-btn.op{ color:var(--accent); }
-.mp-btn.on{ color:var(--accent); border-color:var(--accent); background:rgba(63,224,208,0.1); }
-.mp-btn.disabled{ opacity:0.32; cursor:not-allowed; }
-.mp-letters{ display:none; flex-wrap:wrap; gap:6px; margin-top:8px; }
-.mp-letters.show{ display:flex; }
-.mp-letters .mp-btn{ width:30px; height:30px; padding:0; font-size:11px; }
-.mp-side{ display:flex; flex-direction:column; gap:8px; width:172px; position:relative; }
-@media (max-width:780px){ .mp-side{ width:100%; } }
-.mp-side .mp-btn{ width:100%; }
-.mp-arrowrow{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-.mp-enter{
-  background:var(--accent); color:var(--void); font-weight:700; border:1px solid var(--accent);
-  padding:14px 4px; border-radius:7px; text-align:center; cursor:pointer; font-size:15px;
-  font-family:var(--mono);
-}
-.mp-enter:hover{ background:#5CEBDC; }
-.mp-dropwrap{ position:relative; }
-.mp-drop{
-  position:absolute; bottom:calc(100% + 8px); left:0; width:min(300px,80vw);
-  max-height:280px; background:#0A0F1A; border:1px solid var(--line-strong); border-radius:10px;
-  box-shadow:0 18px 40px rgba(0,0,0,0.55); z-index:50; overflow:hidden; display:flex; flex-direction:column;
-}
-.mp-drop input{ margin:8px; width:calc(100% - 16px); }
-.mp-drop .const-list{ padding:0 6px 8px; }
-
-/* history sidebar */
-.hist-list{ display:flex; flex-direction:column; gap:8px; max-height:520px; overflow-y:auto; padding-right:4px;}
-.hist-item{
-  background:#0A121F; border:1px solid var(--line); border-radius:7px; padding:8px 10px; cursor:pointer;
-}
-.hist-item:hover{ border-color:var(--line-strong); }
-.hist-item .h-expr{ font-size:11px; color:var(--text-dim); word-break:break-all;}
-.hist-item .h-res{ font-size:14px; color:var(--accent); font-weight:600; margin-top:2px;}
-.hist-empty{ color:var(--text-dim2); font-size:12px; text-align:center; padding:30px 0; }
-.side-title{ font-family:var(--display); font-size:13px; letter-spacing:1px; text-transform:uppercase; color:var(--text); margin:0 0 10px; display:flex; justify-content:space-between; align-items:center;}
-.side-title button{ background:none; border:1px solid var(--line); color:var(--text-dim); font-size:10px; padding:4px 8px; border-radius:5px; cursor:pointer; font-family:var(--mono); }
-.mem-box{ margin-top:16px; padding-top:14px; border-top:1px solid var(--line); }
-.mem-row{ display:flex; justify-content:space-between; font-size:11px; color:var(--text-dim); margin-bottom:6px; }
-.mem-row b{ color:var(--accent2); }
-
-.hidden{ display:none !important; }
-.hint{ font-size:11px; color:var(--text-dim2); margin-top:8px; line-height:1.5; }
-footer{ text-align:center; color:var(--text-dim2); font-size:10px; margin-top:26px; letter-spacing:1px; }
-
-/* CONSTANTS LIBRARY */
+/* physical constants dropdown */
 .const-wrap{ position:relative; }
 .const-btn{
   background:rgba(199,125,255,0.10); border:1px solid rgba(199,125,255,0.4); color:var(--accent2);
@@ -356,11 +266,12 @@ footer{ text-align:center; color:var(--text-dim2); font-size:10px; margin-top:26
 .const-item .c-name{ color:var(--text); }
 .const-item .c-val{ color:var(--accent); font-size:11px; white-space:nowrap; }
 .const-empty{ padding:14px; text-align:center; color:var(--text-dim2); font-size:12px; }
+
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.1/math.min.js"></script>
 </head>
 <body>
 <div class="wrap">
-
   <header class="top">
     <div class="brand">
       <div class="brand-mark pulse">V9</div>
@@ -371,241 +282,46 @@ footer{ text-align:center; color:var(--text-dim2); font-size:10px; margin-top:26
     </div>
     <div class="status">
       <div><span class="dot pulse"></span><b>Core</b> Online</div>
-      <div id="modeStatus"><b>Mode</b> Calculator</div>
+      <div><b>Mode</b> Standard</div>
       <div><b>Precision</b> f64</div>
     </div>
   </header>
-
-  <nav class="tabs" id="tabs">
-    <button data-mode="calculator" class="active">Calculator</button>
-    <button data-mode="stats">Statistics</button>
-    <button data-mode="matrix">Matrix</button>
-    <button data-mode="graph">Graph</button>
-    <button data-mode="convert">Units</button>
-    <button data-mode="base">Base / Bitwise</button>
+  <nav class="tabs">
+        <a href="index.html" class="active">Standard</a>
+        <a href="stats.html">Statistics</a>
+        <a href="matrix.html">Matrix</a>
+        <a href="graph.html">Graph</a>
+        <a href="3d.html">3D</a>
+        <a href="units.html">Units</a>
+        <a href="base.html">Base / Bitwise</a>
   </nav>
 
   <div class="grid">
-    <!-- MAIN PANEL -->
-    <div class="panel" id="mainPanel">
-
-      <!-- shared display -->
-      <div id="calcDisplayWrap">
-        <div class="display">
-          <div class="scan"></div>
-          <div class="prev" id="prevLine">&nbsp;</div>
-          <input class="cur" id="curLine" type="text" value="0" autocomplete="off" spellcheck="false">
-          <div class="meta">
-            <span id="angleTag" class="hidden">RAD</span>
-            <span id="memTag" class="hidden">M</span>
-            <span style="margin-left:auto" id="errTag"></span>
+    <div class="panel">
+      <div class="display">
+        <div class="scan"></div>
+        <div class="prev" id="prevLine">&nbsp;</div>
+        <input class="cur" id="curLine" type="text" value="0" autocomplete="off" spellcheck="false">
+        <div class="meta">
+          <span id="angleTag" class="hidden">RAD</span>
+          <span style="margin-left:auto" id="errTag"></span>
+        </div>
+      </div>
+      <div class="row-tools">
+        <button id="degBtn">DEG</button>
+        <button id="radBtn" class="on">RAD</button>
+        <button id="invBtn">INV</button>
+        <div class="const-wrap">
+          <button class="const-btn" id="constToggle">⚛ Physical Constants ▾</button>
+          <div class="const-panel hidden" id="constPanel">
+            <input type="text" id="constSearch" placeholder="Search constants…">
+            <div class="const-list" id="constList"></div>
           </div>
         </div>
       </div>
-
-      <!-- CALCULATOR (scientific keypad is now the standard layer) -->
-      <div class="mode-panel" data-panel="calculator">
-        <div class="row-tools">
-          <button id="degBtn">DEG</button>
-          <button id="radBtn" class="on">RAD</button>
-          <button id="invBtn">INV</button>
-          <div class="const-wrap">
-            <button class="const-btn" id="constToggle">⚛ Physical Constants ▾</button>
-            <div class="const-panel hidden" id="constPanel">
-              <input type="text" id="constSearch" placeholder="Search constants…">
-              <div class="const-list" id="constList"></div>
-            </div>
-          </div>
-        </div>
-        <div class="pad sci" id="padScientific"></div>
-      </div>
-
-      <!-- STATS -->
-      <div class="mode-panel hidden" data-panel="stats">
-        <label class="small">Dataset</label>
-        <div class="field two-col" style="grid-template-columns:1fr auto;">
-          <input type="text" id="statInput" placeholder="Type a number, press Enter to add">
-          <button class="key ghost" style="padding:9px 16px;" id="statClear">Clear</button>
-        </div>
-        <div class="chips" id="statChips"></div>
-        <table class="stat-table" id="statTable"></table>
-        <div class="hint">Enter values one at a time, or paste comma/space separated values and press Enter.</div>
-      </div>
-
-      <!-- MATRIX -->
-      <div class="mode-panel hidden" data-panel="matrix">
-        <div class="two-col">
-          <div>
-            <label class="small">Matrix A — size</label>
-            <select id="matASize"><option>2</option><option>3</option><option selected>2</option></select>
-          </div>
-          <div>
-            <label class="small">Matrix B — size</label>
-            <select id="matBSize"><option>2</option><option>3</option><option selected>2</option></select>
-          </div>
-        </div>
-        <div class="two-col" style="margin-top:10px;">
-          <div><div id="matA" class="matrix-grid"></div></div>
-          <div><div id="matB" class="matrix-grid"></div></div>
-        </div>
-        <div class="row-tools" style="margin-top:6px;">
-          <button data-op="add">A + B</button>
-          <button data-op="sub">A − B</button>
-          <button data-op="mul">A × B</button>
-          <button data-op="detA">det(A)</button>
-          <button data-op="detB">det(B)</button>
-          <button data-op="invA">A⁻¹</button>
-          <button data-op="invB">B⁻¹</button>
-          <button data-op="transA">Aᵀ</button>
-          <button data-op="transB">Bᵀ</button>
-        </div>
-        <label class="small" style="margin-top:10px;">Result</label>
-        <div id="matResult" class="matrix-grid" style="color:var(--accent);"></div>
-      </div>
-
-      <!-- GRAPH -->
-      <div class="mode-panel hidden" data-panel="graph">
-        <div class="graph-shell">
-          <div class="graph-sidebar">
-            <div class="side-label">Expressions</div>
-            <div id="exprList"></div>
-            <button class="ghost-add" id="addExprBtn">+ Add expression</button>
-            <div class="side-label">Sliders</div>
-            <div id="sliderList"></div>
-            <button class="ghost-add" id="addSliderBtn">+ Add slider</button>
-          </div>
-          <div class="graph-stage">
-            <div class="graph-toolbar">
-              <button id="zoomInBtn" title="Zoom in">+</button>
-              <button id="zoomOutBtn" title="Zoom out">−</button>
-              <button id="resetViewBtn" title="Reset view">⟲</button>
-              <span class="coord-readout" id="coordReadout"></span>
-            </div>
-            <canvas id="graphCanvas"></canvas>
-          </div>
-        </div>
-        <div class="hint">Built in-house, no external graphing service. Type expressions like <code>y=sin(x)*sqrt(x)</code> — reference a slider's letter directly in the expression. Drag the canvas to pan, scroll or pinch to zoom.</div>
-
-        <!-- ASSISTIVE MATH KEYPAD -->
-        <div class="mathpad">
-          <div class="mp-col">
-            <div class="mp-grid" id="mpSymbols">
-              <button class="mp-btn" data-mp="x">x</button>
-              <button class="mp-btn" data-mp="y">y</button>
-              <button class="mp-btn" data-mp="sq">a²</button>
-              <button class="mp-btn" data-mp="pow">a^b</button>
-              <button class="mp-btn" data-mp="(">(</button>
-              <button class="mp-btn" data-mp=")">)</button>
-              <button class="mp-btn" data-mp="<">&lt;</button>
-              <button class="mp-btn" data-mp=">">&gt;</button>
-              <button class="mp-btn" data-mp="abs">|a|</button>
-              <button class="mp-btn" data-mp=",">,</button>
-              <button class="mp-btn" data-mp="<=">≤</button>
-              <button class="mp-btn" data-mp=">=">≥</button>
-              <button class="mp-btn" id="mpAbcBtn">ABC</button>
-              <button class="mp-btn disabled" title="Voice input not available">🔊</button>
-              <button class="mp-btn" data-mp="sqrt">√</button>
-              <button class="mp-btn" data-mp="pi">π</button>
-            </div>
-            <div class="mp-letters" id="mpLetters"></div>
-          </div>
-
-          <div class="mp-col">
-            <div class="mp-grid">
-              <button class="mp-btn" data-mp="7">7</button>
-              <button class="mp-btn" data-mp="8">8</button>
-              <button class="mp-btn" data-mp="9">9</button>
-              <button class="mp-btn op" data-mp="/">÷</button>
-              <button class="mp-btn" data-mp="4">4</button>
-              <button class="mp-btn" data-mp="5">5</button>
-              <button class="mp-btn" data-mp="6">6</button>
-              <button class="mp-btn op" data-mp="*">×</button>
-              <button class="mp-btn" data-mp="1">1</button>
-              <button class="mp-btn" data-mp="2">2</button>
-              <button class="mp-btn" data-mp="3">3</button>
-              <button class="mp-btn op" data-mp="-">−</button>
-              <button class="mp-btn" data-mp="0">0</button>
-              <button class="mp-btn" data-mp=".">.</button>
-              <button class="mp-btn" data-mp="=">=</button>
-              <button class="mp-btn op" data-mp="+">+</button>
-            </div>
-          </div>
-
-          <div class="mp-side">
-            <div class="mp-dropwrap">
-              <button class="mp-btn" id="mpFuncBtn">functions</button>
-              <div class="mp-drop hidden" id="mpFuncDrop">
-                <input type="text" id="mpFuncSearch" placeholder="Search functions…">
-                <div class="const-list" id="mpFuncList"></div>
-              </div>
-            </div>
-            <div class="mp-arrowrow">
-              <button class="mp-btn" id="mpLeft">←</button>
-              <button class="mp-btn" id="mpRight">→</button>
-            </div>
-            <button class="mp-btn" id="mpBack">⌫</button>
-            <div class="mp-dropwrap">
-              <button class="mp-btn" id="mpConstBtn">⚛ constants</button>
-              <div class="mp-drop hidden" id="mpConstDrop">
-                <input type="text" id="mpConstSearch" placeholder="Search constants…">
-                <div class="const-list" id="mpConstList"></div>
-              </div>
-            </div>
-            <button class="mp-enter" id="mpEnter">↵</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- CONVERT -->
-      <div class="mode-panel hidden" data-panel="convert">
-        <div class="field">
-          <label class="small">Category</label>
-          <select id="convCat"></select>
-        </div>
-        <div class="two-col">
-          <div>
-            <label class="small">From</label>
-            <select id="convFrom"></select>
-            <input type="text" id="convVal" value="1" style="margin-top:8px;">
-          </div>
-          <div>
-            <label class="small">To</label>
-            <select id="convTo"></select>
-            <div style="margin-top:8px; background:#0A1220; border:1px solid var(--line); border-radius:6px; padding:9px 10px; color:var(--accent); font-weight:600;" id="convResult">—</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- BASE / BITWISE -->
-      <div class="mode-panel hidden" data-panel="base">
-        <div class="field">
-          <label class="small">Decimal input</label>
-          <input type="text" id="baseInput" value="0">
-        </div>
-        <div class="stat-table" style="margin-bottom:12px;">
-          <table class="stat-table" style="width:100%;">
-            <tr><td>BIN</td><td id="baseBin">0</td></tr>
-            <tr><td>OCT</td><td id="baseOct">0</td></tr>
-            <tr><td>DEC</td><td id="baseDec">0</td></tr>
-            <tr><td>HEX</td><td id="baseHex">0</td></tr>
-          </table>
-        </div>
-        <label class="small">Bitwise — operand B</label>
-        <input type="text" id="baseB" value="0" style="margin-bottom:10px;">
-        <div class="row-tools">
-          <button data-bit="AND">AND</button>
-          <button data-bit="OR">OR</button>
-          <button data-bit="XOR">XOR</button>
-          <button data-bit="NOT">NOT A</button>
-          <button data-bit="SHL">A &lt;&lt; 1</button>
-          <button data-bit="SHR">A &gt;&gt; 1</button>
-        </div>
-        <div class="hint" id="bitResult">Result: —</div>
-      </div>
-
+      <div class="pad sci" id="padScientific"></div>
     </div>
 
-    <!-- SIDEBAR -->
     <div class="panel">
       <div class="side-title">History <button id="clearHist">Clear</button></div>
       <div class="hist-list" id="histList"><div class="hist-empty">No calculations yet</div></div>
@@ -625,11 +341,12 @@ footer{ text-align:center; color:var(--text-dim2); font-size:10px; margin-top:26
 </div>
 
 <script>
-/* ================= CORE MATH ENGINE ================= */
+/* ---- math engine with DEG/RAD-aware trig ---- */
 const mx = math.create(math.all, {});
-let angleMode = 'rad';
-function toRad(v){ return angleMode==='deg' ? v*Math.PI/180 : v; }
-function fromRad(v){ return angleMode==='deg' ? v*180/Math.PI : v; }
+function getAngleMode(){ return localStorage.getItem('vanta_sci_angle') || 'rad'; }
+function setAngleMode(m){ localStorage.setItem('vanta_sci_angle', m); }
+function toRad(v){ return getAngleMode()==='deg' ? v*Math.PI/180 : v; }
+function fromRad(v){ return getAngleMode()==='deg' ? v*180/Math.PI : v; }
 mx.import({
   sin:  x => typeof x==='number' ? Math.sin(toRad(x)) : math.sin(x),
   cos:  x => typeof x==='number' ? Math.cos(toRad(x)) : math.cos(x),
@@ -638,144 +355,11 @@ mx.import({
   acos: x => typeof x==='number' ? fromRad(Math.acos(x)) : math.acos(x),
   atan: x => typeof x==='number' ? fromRad(Math.atan(x)) : math.atan(x),
 }, {override:true});
-
-let expr = '';
-let lastAnswer = 0;
-let memory = 0;
-let history = [];
-
-const curLine = document.getElementById('curLine');
-const prevLine = document.getElementById('prevLine');
-const errTag = document.getElementById('errTag');
-
-function renderExpr(){
-  curLine.value = expr === '' ? '0' : expr;
-}
-function insert(v){
-  expr += v;
-  errTag.textContent = '';
-  renderExpr();
-}
-function clearAll(){ expr=''; renderExpr(); prevLine.textContent='\u00A0'; errTag.textContent=''; }
-function delOne(){ expr = expr.slice(0,-1); renderExpr(); }
-
 function prettyExpr(e){
   return e.replaceAll('×','*').replaceAll('÷','/').replaceAll('π','pi').replaceAll('√','sqrt')
-          .replace(/(\d+(\.\d+)?|\))!/g,'factorial($1)')
-          .replaceAll('^','^');
+          .replace(/(\d+(\.\d+)?|\))!/g,'factorial($1)');
 }
-
-function evaluate(){
-  if(!expr){ return; }
-  try{
-    let clean = prettyExpr(expr);
-    clean = clean.replace(/(\d+(\.\d+)?|\))!/g,'factorial($1)');
-    const result = mx.evaluate(clean);
-    const val = (typeof result === 'number') ? mx.format(result, {precision:12}) : result.toString();
-    prevLine.textContent = expr + ' =';
-    lastAnswer = (typeof result === 'number') ? result : NaN;
-    expr = val;
-    renderExpr();
-    pushHistory(prevLine.textContent.replace(/ =$/,''), val);
-  }catch(err){
-    errTag.textContent = 'SYNTAX ERR';
-  }
-}
-
-function pushHistory(e,r){
-  history.unshift({e,r,t:Date.now()});
-  if(history.length>60) history.pop();
-  renderHistory();
-}
-function renderHistory(){
-  const el = document.getElementById('histList');
-  if(history.length===0){ el.innerHTML = '<div class="hist-empty">No calculations yet</div>'; return; }
-  el.innerHTML = history.map(h=>`<div class="hist-item" data-expr="${encodeURIComponent(h.r)}"><div class="h-expr">${h.e}</div><div class="h-res">${h.r}</div></div>`).join('');
-  el.querySelectorAll('.hist-item').forEach(it=>{
-    it.addEventListener('click',()=>{ expr = decodeURIComponent(it.dataset.expr); renderExpr(); });
-  });
-}
-document.getElementById('clearHist').addEventListener('click',()=>{ history=[]; renderHistory(); });
-
-/* memory */
-function refreshMemUI(){
-  document.getElementById('memVal').textContent = mx.format(memory,{precision:8});
-  document.getElementById('memTag').classList.toggle('hidden', memory===0);
-}
-document.getElementById('mPlus').addEventListener('click',()=>{ memory += Number(lastAnswerOrExpr()); refreshMemUI(); });
-document.getElementById('mMinus').addEventListener('click',()=>{ memory -= Number(lastAnswerOrExpr()); refreshMemUI(); });
-document.getElementById('mR').addEventListener('click',()=>{ insert(String(memory)); });
-document.getElementById('mC').addEventListener('click',()=>{ memory=0; refreshMemUI(); });
-function lastAnswerOrExpr(){
-  try{ return mx.evaluate(prettyExpr(expr||'0')); }catch(e){ return 0; }
-}
-
-/* ================= KEYPAD BUILD (merged standard+scientific) ================= */
-const sciKeys = [
-  ['(',''],[')',''],['π',''],['e',''],['n!',''],
-  ['sin','fn'],['cos','fn'],['tan','fn'],['ln','fn'],['log','fn'],
-  ['√','fn'],['x²','fn'],['x^y','fn'],['10^x','fn'],['e^x','fn'],
-  ['7',''],['8',''],['9',''],['÷','op'],['AC','warn'],
-  ['4',''],['5',''],['6',''],['×','op'],['DEL','warn'],
-  ['1',''],['2',''],['3',''],['-','op'],['%','op'],
-  ['0',''],['.',''],['Ans','fn'],['+','op'],['=','eq'],
-];
-const padSci = document.getElementById('padScientific');
-sciKeys.forEach(([label,cls])=>{
-  const b = document.createElement('button');
-  b.className = 'key '+cls;
-  b.textContent = label;
-  b.addEventListener('click',()=>handleSciKey(label));
-  padSci.appendChild(b);
-});
-
-let invMode = false;
-document.getElementById('degBtn').addEventListener('click',()=>{ angleMode='deg'; syncAngleUI(); });
-document.getElementById('radBtn').addEventListener('click',()=>{ angleMode='rad'; syncAngleUI(); });
-document.getElementById('invBtn').addEventListener('click',(e)=>{ invMode=!invMode; e.target.classList.toggle('toggleon',invMode); });
-function syncAngleUI(){
-  document.getElementById('degBtn').classList.toggle('on',angleMode==='deg');
-  document.getElementById('radBtn').classList.toggle('on',angleMode==='rad');
-  const tag = document.getElementById('angleTag');
-  tag.textContent = angleMode.toUpperCase();
-  tag.classList.remove('hidden');
-}
-syncAngleUI();
-
-function handleSciKey(label){
-  const fnName = invMode ? {sin:'asin',cos:'acos',tan:'atan'}[label] : label;
-  switch(label){
-    case 'AC': return clearAll();
-    case 'DEL': return delOne();
-    case '=': return evaluate();
-    case 'π': return insert('π');
-    case 'e': return insert('e');
-    case 'n!': return insert('!');
-    case '√': return insert('√(');
-    case 'x²': return insert('^2');
-    case 'x^y': return insert('^');
-    case '10^x': return insert('10^');
-    case 'e^x': return insert('e^');
-    case 'Ans': return insert(mx.format(lastAnswer,{precision:10}));
-    case 'sin': case 'cos': case 'tan':
-      return insert((fnName||label)+'(');
-    case 'ln': return insert('log(');
-    case 'log': return insert('log10(');
-    default: return insert(label);
-  }
-}
-
-/* keyboard support */
-document.addEventListener('keydown',(e)=>{
-  if(document.querySelector('[data-panel="calculator"]').classList.contains('hidden')) return;
-  if(/[0-9+\-*/.()]/.test(e.key)){ insert(e.key==='*'?'×':e.key==='/'?'÷':e.key); }
-  else if(e.key==='Enter'){ evaluate(); }
-  else if(e.key==='Backspace'){ delOne(); }
-  else if(e.key==='Escape'){ clearAll(); }
-});
-renderExpr();
-
-/* ================= PHYSICAL CONSTANTS LIBRARY ================= */
+/* ---- physical constants library ---- */
 const constants = [
   ['Proton mass','1.6726219e-27'],
   ['Neutron mass','1.6750e-27'],
@@ -818,34 +402,163 @@ const constants = [
   ['Universal gravitational constant','6.67430e-11'],
   ['Standard atmospheric pressure','101325'],
 ];
-const constList = document.getElementById('constList');
-const constSearch = document.getElementById('constSearch');
-const constPanel = document.getElementById('constPanel');
-const constToggle = document.getElementById('constToggle');
 
-function renderConstants(filter=''){
-  const f = filter.trim().toLowerCase();
-  const rows = constants.filter(([name])=>name.toLowerCase().includes(f));
-  if(rows.length===0){ constList.innerHTML = '<div class="const-empty">No matches</div>'; return; }
-  constList.innerHTML = rows.map(([name,val])=>
-    `<div class="const-item" data-val="${val}"><span class="c-name">${name}</span><span class="c-val">${val}</span></div>`
-  ).join('');
-  constList.querySelectorAll('.const-item').forEach(item=>{
-    item.addEventListener('click',()=>{
-      insert(item.dataset.val);
-      closeConstPanel();
+/* ---- history + memory (persisted via localStorage, shared across pages) ---- */
+function loadHistory(){ try{ return JSON.parse(localStorage.getItem('vanta_history')||'[]'); }catch(e){ return []; } }
+function saveHistoryArr(h){ localStorage.setItem('vanta_history', JSON.stringify(h.slice(0,60))); }
+function pushHistory(e,r){
+  const h = loadHistory();
+  h.unshift({ e, r, t:Date.now() });
+  saveHistoryArr(h);
+  renderHistory();
+}
+function renderHistory(){
+  const el = document.getElementById('histList');
+  if(!el) return;
+  const h = loadHistory();
+  if(h.length===0){ el.innerHTML = '<div class="hist-empty">No calculations yet</div>'; return; }
+  el.innerHTML = h.map(x=>`<div class="hist-item" data-expr="${encodeURIComponent(x.r)}"><div class="h-expr">${x.e}</div><div class="h-res">${x.r}</div></div>`).join('');
+  el.querySelectorAll('.hist-item').forEach(it=>{
+    it.addEventListener('click',()=>{
+      document.dispatchEvent(new CustomEvent('vanta:reuse', { detail: decodeURIComponent(it.dataset.expr) }));
     });
   });
 }
-function openConstPanel(){
-  constPanel.classList.remove('hidden');
-  renderConstants(constSearch.value);
-  constSearch.focus();
+function getMemory(){ return Number(localStorage.getItem('vanta_memory')||'0'); }
+function setMemory(v){ localStorage.setItem('vanta_memory', String(v)); refreshMemUI(); }
+function getLastAnswer(){ return Number(localStorage.getItem('vanta_lastAnswer')||'0'); }
+function setLastAnswer(v){ localStorage.setItem('vanta_lastAnswer', String(v)); }
+function refreshMemUI(){
+  const el = document.getElementById('memVal');
+  if(el) el.textContent = (typeof mx!=='undefined' ? mx.format(getMemory(),{precision:8}) : String(getMemory()));
 }
-function closeConstPanel(){
-  constPanel.classList.add('hidden');
-  constSearch.value='';
+function wireSidebar(){
+  const clearBtn = document.getElementById('clearHist');
+  if(clearBtn) clearBtn.addEventListener('click',()=>{ saveHistoryArr([]); renderHistory(); });
+  const mPlus = document.getElementById('mPlus');
+  const mMinus = document.getElementById('mMinus');
+  const mR = document.getElementById('mR');
+  const mC = document.getElementById('mC');
+  if(mPlus) mPlus.addEventListener('click',()=> setMemory(getMemory()+getLastAnswer()));
+  if(mMinus) mMinus.addEventListener('click',()=> setMemory(getMemory()-getLastAnswer()));
+  if(mR) mR.addEventListener('click',()=>{
+    document.dispatchEvent(new CustomEvent('vanta:reuse', { detail: String(getMemory()) }));
+  });
+  if(mC) mC.addEventListener('click',()=> setMemory(0));
+  renderHistory();
+  refreshMemUI();
 }
+wireSidebar();
+/* ===== Calculator page (Standard/Scientific merged) ===== */
+let expr = '';
+const curLine = document.getElementById('curLine');
+const prevLine = document.getElementById('prevLine');
+const errTag = document.getElementById('errTag');
+
+function renderExpr(){ curLine.value = expr === '' ? '0' : expr; }
+function insert(v){ expr += v; errTag.textContent = ''; renderExpr(); }
+function clearAll(){ expr=''; renderExpr(); prevLine.textContent='\u00A0'; errTag.textContent=''; }
+function delOne(){ expr = expr.slice(0,-1); renderExpr(); }
+
+function evaluate(){
+  if(!expr) return;
+  try{
+    let clean = prettyExpr(expr);
+    clean = clean.replace(/(\d+(\.\d+)?|\))!/g,'factorial($1)');
+    const result = mx.evaluate(clean);
+    const val = (typeof result === 'number') ? mx.format(result, {precision:12}) : result.toString();
+    prevLine.textContent = expr + ' =';
+    if(typeof result === 'number') setLastAnswer(result);
+    expr = val;
+    renderExpr();
+    pushHistory(prevLine.textContent.replace(/ =$/,''), val);
+  }catch(err){
+    errTag.textContent = 'SYNTAX ERR';
+  }
+}
+
+/* keypad */
+const sciKeys = [
+  ['(',''],[')',''],['π',''],['e',''],['n!',''],
+  ['sin','fn'],['cos','fn'],['tan','fn'],['ln','fn'],['log','fn'],
+  ['√','fn'],['x²','fn'],['x^y','fn'],['10^x','fn'],['e^x','fn'],
+  ['7',''],['8',''],['9',''],['÷','op'],['AC','warn'],
+  ['4',''],['5',''],['6',''],['×','op'],['DEL','warn'],
+  ['1',''],['2',''],['3',''],['-','op'],['%','op'],
+  ['0',''],['.',''],['Ans','fn'],['+','op'],['=','eq'],
+];
+const padSci = document.getElementById('padScientific');
+sciKeys.forEach(([label,cls])=>{
+  const b = document.createElement('button');
+  b.className = 'key '+cls;
+  b.textContent = label;
+  b.addEventListener('click',()=>handleSciKey(label));
+  padSci.appendChild(b);
+});
+
+let invMode = false;
+document.getElementById('degBtn').addEventListener('click',()=>{ setAngleMode('deg'); syncAngleUI(); });
+document.getElementById('radBtn').addEventListener('click',()=>{ setAngleMode('rad'); syncAngleUI(); });
+document.getElementById('invBtn').addEventListener('click',(e)=>{ invMode=!invMode; e.target.classList.toggle('toggleon',invMode); });
+function syncAngleUI(){
+  const mode = getAngleMode();
+  document.getElementById('degBtn').classList.toggle('on', mode==='deg');
+  document.getElementById('radBtn').classList.toggle('on', mode==='rad');
+  const tag = document.getElementById('angleTag');
+  tag.textContent = mode.toUpperCase();
+  tag.classList.remove('hidden');
+}
+syncAngleUI();
+
+function handleSciKey(label){
+  const fnName = invMode ? {sin:'asin',cos:'acos',tan:'atan'}[label] : label;
+  switch(label){
+    case 'AC': return clearAll();
+    case 'DEL': return delOne();
+    case '=': return evaluate();
+    case 'π': return insert('π');
+    case 'e': return insert('e');
+    case 'n!': return insert('!');
+    case '√': return insert('√(');
+    case 'x²': return insert('^2');
+    case 'x^y': return insert('^');
+    case '10^x': return insert('10^');
+    case 'e^x': return insert('e^');
+    case 'Ans': return insert(mx.format(getLastAnswer(),{precision:10}));
+    case 'sin': case 'cos': case 'tan':
+      return insert((fnName||label)+'(');
+    case 'ln': return insert('log(');
+    case 'log': return insert('log10(');
+    default: return insert(label);
+  }
+}
+
+/* keyboard support */
+document.addEventListener('keydown',(e)=>{
+  if(/[0-9+\-*/.()]/.test(e.key)){ insert(e.key==='*'?'×':e.key==='/'?'÷':e.key); }
+  else if(e.key==='Enter'){ evaluate(); }
+  else if(e.key==='Backspace'){ delOne(); }
+  else if(e.key==='Escape'){ clearAll(); }
+});
+
+/* physical constants dropdown */
+const constListEl = document.getElementById('constList');
+const constSearch = document.getElementById('constSearch');
+const constPanel = document.getElementById('constPanel');
+const constToggle = document.getElementById('constToggle');
+function renderConstants(filter=''){
+  const f = filter.trim().toLowerCase();
+  const rows = constants.filter(([name])=>name.toLowerCase().includes(f));
+  if(rows.length===0){ constListEl.innerHTML = '<div class="const-empty">No matches</div>'; return; }
+  constListEl.innerHTML = rows.map(([name,val])=>
+    `<div class="const-item" data-val="${val}"><span class="c-name">${name}</span><span class="c-val">${val}</span></div>`
+  ).join('');
+  constListEl.querySelectorAll('.const-item').forEach(item=>{
+    item.addEventListener('click',()=>{ insert(item.dataset.val); closeConstPanel(); });
+  });
+}
+function openConstPanel(){ constPanel.classList.remove('hidden'); renderConstants(constSearch.value); constSearch.focus(); }
+function closeConstPanel(){ constPanel.classList.add('hidden'); constSearch.value=''; }
 constToggle.addEventListener('click',(e)=>{
   e.stopPropagation();
   constPanel.classList.contains('hidden') ? openConstPanel() : closeConstPanel();
@@ -853,592 +566,15 @@ constToggle.addEventListener('click',(e)=>{
 constSearch.addEventListener('input',()=>renderConstants(constSearch.value));
 constSearch.addEventListener('click',(e)=>e.stopPropagation());
 document.addEventListener('click',(e)=>{
-  if(!constPanel.contains(e.target) && e.target!==constToggle){ closeConstPanel(); }
+  if(!constPanel.contains(e.target) && e.target!==constToggle) closeConstPanel();
 });
 renderConstants();
 
-/* ================= TABS ================= */
-document.querySelectorAll('nav.tabs button').forEach(btn=>{
-  btn.addEventListener('click',()=>{
-    document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    const mode = btn.dataset.mode;
-    document.querySelectorAll('.mode-panel').forEach(p=>p.classList.add('hidden'));
-    document.querySelector(`[data-panel="${mode}"]`).classList.remove('hidden');
-    document.getElementById('calcDisplayWrap').classList.toggle('hidden', mode!=='calculator');
-    document.getElementById('modeStatus').innerHTML = '<b>Mode</b> ' + btn.textContent;
-    if(mode==='matrix') buildMatrixInputs();
-    if(mode==='graph') setTimeout(drawGraph, 0);
-  });
-});
+/* reuse from history / memory recall */
+document.addEventListener('vanta:reuse',(e)=>{ expr = e.detail; renderExpr(); });
 
-/* ================= STATISTICS ================= */
-let dataset = [];
-function renderStats(){
-  const chips = document.getElementById('statChips');
-  chips.innerHTML = dataset.map((v,i)=>`<div class="chip">${v}<button data-i="${i}">×</button></div>`).join('');
-  chips.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
-    dataset.splice(Number(b.dataset.i),1); renderStats();
-  }));
-  const table = document.getElementById('statTable');
-  if(dataset.length===0){ table.innerHTML=''; return; }
-  const sorted = [...dataset].sort((a,b)=>a-b);
-  const n = dataset.length;
-  const sum = dataset.reduce((a,b)=>a+b,0);
-  const mean = sum/n;
-  const median = mx.median(dataset);
-  let modeVal;
-  try{ modeVal = mx.mode(dataset).join(', '); }catch(e){ modeVal='—'; }
-  const variance = n>1 ? mx.variance(dataset,'unbiased') : 0;
-  const stdev = n>1 ? mx.std(dataset,'unbiased') : 0;
-  const popStd = mx.std(dataset,'uncorrected');
-  const q1 = mx.quantileSeq(dataset,0.25);
-  const q3 = mx.quantileSeq(dataset,0.75);
-  const rows = [
-    ['Count', n],
-    ['Sum', mx.format(sum,{precision:10})],
-    ['Mean', mx.format(mean,{precision:10})],
-    ['Median', mx.format(median,{precision:10})],
-    ['Mode', modeVal],
-    ['Min', sorted[0]],
-    ['Max', sorted[n-1]],
-    ['Range', mx.format(sorted[n-1]-sorted[0],{precision:10})],
-    ['Q1', mx.format(q1,{precision:10})],
-    ['Q3', mx.format(q3,{precision:10})],
-    ['Variance (sample)', mx.format(variance,{precision:10})],
-    ['Std Dev (sample)', mx.format(stdev,{precision:10})],
-    ['Std Dev (population)', mx.format(popStd,{precision:10})],
-  ];
-  table.innerHTML = rows.map(([l,v])=>`<tr><td>${l}</td><td>${v}</td></tr>`).join('');
-}
-document.getElementById('statInput').addEventListener('keydown',(e)=>{
-  if(e.key==='Enter'){
-    const raw = e.target.value.trim();
-    if(!raw) return;
-    raw.split(/[,\s]+/).forEach(tok=>{
-      const v = Number(tok);
-      if(!isNaN(v) && tok!=='') dataset.push(v);
-    });
-    e.target.value='';
-    renderStats();
-  }
-});
-document.getElementById('statClear').addEventListener('click',()=>{ dataset=[]; renderStats(); });
+renderExpr();
 
-/* ================= MATRIX ================= */
-function buildMatrixInputs(){
-  buildOneMatrix('matA', Number(document.getElementById('matASize').value));
-  buildOneMatrix('matB', Number(document.getElementById('matBSize').value));
-}
-function buildOneMatrix(id, size){
-  const el = document.getElementById(id);
-  el.style.gridTemplateColumns = `repeat(${size},56px)`;
-  el.innerHTML = '';
-  for(let i=0;i<size*size;i++){
-    const inp = document.createElement('input');
-    inp.type='text'; inp.value = (i%(size+1)===0)?'1':'0';
-    inp.dataset.idx = i;
-    el.appendChild(inp);
-  }
-}
-function readMatrix(id, size){
-  const inputs = document.querySelectorAll(`#${id} input`);
-  const vals = Array.from(inputs).map(i=>Number(i.value)||0);
-  const rows=[];
-  for(let r=0;r<size;r++) rows.push(vals.slice(r*size,r*size+size));
-  return rows;
-}
-document.getElementById('matASize').addEventListener('change',buildMatrixInputs);
-document.getElementById('matBSize').addEventListener('change',buildMatrixInputs);
-buildMatrixInputs();
-
-function showMatrixResult(m){
-  const el = document.getElementById('matResult');
-  if(typeof m === 'number'){
-    el.style.gridTemplateColumns = '1fr';
-    el.innerHTML = `<div style="padding:8px 4px;">${mx.format(m,{precision:8})}</div>`;
-    return;
-  }
-  const cols = m[0].length;
-  el.style.gridTemplateColumns = `repeat(${cols}, 70px)`;
-  el.innerHTML = m.flat().map(v=>`<div style="padding:8px 4px; text-align:center; background:#0A1220; border:1px solid var(--line); border-radius:5px;">${mx.format(v,{precision:6})}</div>`).join('');
-}
-document.querySelectorAll('[data-op]').forEach(btn=>{
-  btn.addEventListener('click',()=>{
-    const sizeA = Number(document.getElementById('matASize').value);
-    const sizeB = Number(document.getElementById('matBSize').value);
-    const A = readMatrix('matA', sizeA);
-    const B = readMatrix('matB', sizeB);
-    try{
-      let r;
-      switch(btn.dataset.op){
-        case 'add': r = mx.add(A,B); break;
-        case 'sub': r = mx.subtract(A,B); break;
-        case 'mul': r = mx.multiply(A,B); break;
-        case 'detA': r = mx.det(A); break;
-        case 'detB': r = mx.det(B); break;
-        case 'invA': r = mx.inv(A); break;
-        case 'invB': r = mx.inv(B); break;
-        case 'transA': r = mx.transpose(A); break;
-        case 'transB': r = mx.transpose(B); break;
-      }
-      showMatrixResult(r);
-    }catch(err){
-      document.getElementById('matResult').innerHTML = `<div style="color:var(--warn); grid-column:1/-1;">Error: ${err.message}</div>`;
-    }
-  });
-});
-
-/* ================= GRAPH — self-built engine ================= */
-const gcanvas = document.getElementById('graphCanvas');
-const gctx = gcanvas.getContext('2d');
-let view = { xmin:-10, xmax:10, ymin:-6, ymax:6 };
-const palette = ['#3FE0D0','#C77DFF','#FF6B6B','#F0C93F','#6BAFFF','#7DFFB2'];
-let graphExprs = [{ id:1, text:'y=sin(x)*sqrt(x)', color:palette[0], visible:true }];
-let exprSeq = 2;
-let sliders = [];
-
-function fitGCanvas(){
-  const ratio = window.devicePixelRatio || 1;
-  const rect = gcanvas.getBoundingClientRect();
-  if(rect.width===0) return false;
-  gcanvas.width = rect.width*ratio; gcanvas.height = rect.height*ratio;
-  gctx.setTransform(ratio,0,0,ratio,0,0);
-  return true;
-}
-function niceNum(range, round){
-  const exp = Math.floor(Math.log10(range));
-  const frac = range / Math.pow(10,exp);
-  let niceFrac;
-  if(round){ niceFrac = frac<1.5?1:frac<3?2:frac<7?5:10; }
-  else{ niceFrac = frac<=1?1:frac<=2?2:frac<=5?5:10; }
-  return niceFrac * Math.pow(10,exp);
-}
-function fmtTick(v){
-  if(Math.abs(v)>=100000 || (Math.abs(v)<0.0001 && v!==0)) return v.toExponential(1);
-  return Number(v.toPrecision(6)).toString();
-}
-function drawGraph(){
-  if(!fitGCanvas()) return;
-  const w = gcanvas.clientWidth, h = gcanvas.clientHeight;
-  gctx.clearRect(0,0,w,h);
-  const { xmin, xmax, ymin, ymax } = view;
-  const toPx = x => (x-xmin)/(xmax-xmin)*w;
-  const toPy = y => h - (y-ymin)/(ymax-ymin)*h;
-
-  const xStep = niceNum((xmax-xmin)/8, true);
-  const yStep = niceNum((ymax-ymin)/6, true);
-  gctx.font = '10px JetBrains Mono, monospace';
-
-  for(let gx = Math.ceil(xmin/xStep)*xStep; gx<=xmax; gx+=xStep){
-    const px = toPx(gx);
-    const isZero = Math.abs(gx) < xStep*1e-6;
-    gctx.strokeStyle = isZero ? 'rgba(220,238,255,0.4)' : 'rgba(63,224,208,0.12)';
-    gctx.lineWidth = isZero ? 1.4 : 1;
-    gctx.beginPath(); gctx.moveTo(px,0); gctx.lineTo(px,h); gctx.stroke();
-    if(!isZero){ gctx.fillStyle='rgba(220,238,255,0.35)'; gctx.fillText(fmtTick(gx), px+3, h-4); }
-  }
-  for(let gy = Math.ceil(ymin/yStep)*yStep; gy<=ymax; gy+=yStep){
-    const py = toPy(gy);
-    const isZero = Math.abs(gy) < yStep*1e-6;
-    gctx.strokeStyle = isZero ? 'rgba(220,238,255,0.4)' : 'rgba(63,224,208,0.12)';
-    gctx.lineWidth = isZero ? 1.4 : 1;
-    gctx.beginPath(); gctx.moveTo(0,py); gctx.lineTo(w,py); gctx.stroke();
-    if(!isZero){ gctx.fillStyle='rgba(220,238,255,0.35)'; gctx.fillText(fmtTick(gy), 4, py-4); }
-  }
-
-  const scope = {};
-  sliders.forEach(s=>scope[s.name]=s.value);
-
-  graphExprs.filter(e=>e.visible).forEach(e=>{
-    const rhs = e.text.replace(/^\s*y\s*=/,'').trim();
-    if(!rhs) return;
-    let node;
-    try{ node = mx.compile(prettyExpr(rhs)); }catch(err){ return; }
-    gctx.strokeStyle = e.color; gctx.lineWidth = 2.4;
-    gctx.shadowColor = e.color; gctx.shadowBlur = 6;
-    gctx.beginPath();
-    let started = false;
-    const steps = Math.max(200, Math.floor(w));
-    for(let i=0;i<=steps;i++){
-      const x = xmin + (xmax-xmin)*i/steps;
-      let y;
-      try{ y = node.evaluate({...scope, x}); }catch(err){ y = NaN; }
-      if(typeof y!=='number' || !isFinite(y) || Math.abs(y) > (ymax-ymin)*50 + 1e6){ started=false; continue; }
-      const px = toPx(x), py = toPy(y);
-      if(!started){ gctx.moveTo(px,py); started=true; } else { gctx.lineTo(px,py); }
-    }
-    gctx.stroke();
-    gctx.shadowBlur = 0;
-  });
-}
-
-/* pan + zoom */
-let dragging=false, lastPx=0, lastPy=0, pinchDist=null;
-gcanvas.addEventListener('mousedown',(e)=>{ dragging=true; gcanvas.classList.add('dragging'); lastPx=e.offsetX; lastPy=e.offsetY; });
-window.addEventListener('mouseup',()=>{ dragging=false; gcanvas.classList.remove('dragging'); });
-gcanvas.addEventListener('mousemove',(e)=>{
-  const w=gcanvas.clientWidth, h=gcanvas.clientHeight;
-  const dataX = view.xmin + (e.offsetX/w)*(view.xmax-view.xmin);
-  const dataY = view.ymin + ((h-e.offsetY)/h)*(view.ymax-view.ymin);
-  document.getElementById('coordReadout').textContent = `(${dataX.toFixed(2)}, ${dataY.toFixed(2)})`;
-  if(dragging){
-    const dx = (e.offsetX-lastPx)/w*(view.xmax-view.xmin);
-    const dy = (e.offsetY-lastPy)/h*(view.ymax-view.ymin);
-    view.xmin -= dx; view.xmax -= dx; view.ymin += dy; view.ymax += dy;
-    lastPx=e.offsetX; lastPy=e.offsetY;
-    drawGraph();
-  }
-});
-gcanvas.addEventListener('wheel',(e)=>{
-  e.preventDefault();
-  zoomAt(e.offsetX, e.offsetY, e.deltaY>0 ? 1.12 : 0.89);
-},{passive:false});
-function zoomAt(px,py,factor){
-  const w=gcanvas.clientWidth, h=gcanvas.clientHeight;
-  const dataX = view.xmin + (px/w)*(view.xmax-view.xmin);
-  const dataY = view.ymin + ((h-py)/h)*(view.ymax-view.ymin);
-  view.xmin = dataX + (view.xmin-dataX)*factor;
-  view.xmax = dataX + (view.xmax-dataX)*factor;
-  view.ymin = dataY + (view.ymin-dataY)*factor;
-  view.ymax = dataY + (view.ymax-dataY)*factor;
-  drawGraph();
-}
-document.getElementById('zoomInBtn').addEventListener('click',()=>zoomAt(gcanvas.clientWidth/2,gcanvas.clientHeight/2,0.8));
-document.getElementById('zoomOutBtn').addEventListener('click',()=>zoomAt(gcanvas.clientWidth/2,gcanvas.clientHeight/2,1.25));
-document.getElementById('resetViewBtn').addEventListener('click',()=>{ view={xmin:-10,xmax:10,ymin:-6,ymax:6}; drawGraph(); });
-window.addEventListener('resize',()=>{ if(!document.querySelector('[data-panel="graph"]').classList.contains('hidden')) drawGraph(); });
-
-function touchDist(t){ return Math.hypot(t[0].clientX-t[1].clientX, t[0].clientY-t[1].clientY); }
-gcanvas.addEventListener('touchstart',(e)=>{
-  const rect = gcanvas.getBoundingClientRect();
-  if(e.touches.length===1){ dragging=true; lastPx=e.touches[0].clientX-rect.left; lastPy=e.touches[0].clientY-rect.top; }
-  else if(e.touches.length===2){ pinchDist = touchDist(e.touches); }
-},{passive:true});
-gcanvas.addEventListener('touchmove',(e)=>{
-  const rect = gcanvas.getBoundingClientRect();
-  const w=gcanvas.clientWidth, h=gcanvas.clientHeight;
-  if(e.touches.length===1 && dragging){
-    const px=e.touches[0].clientX-rect.left, py=e.touches[0].clientY-rect.top;
-    const dx=(px-lastPx)/w*(view.xmax-view.xmin);
-    const dy=(py-lastPy)/h*(view.ymax-view.ymin);
-    view.xmin-=dx; view.xmax-=dx; view.ymin+=dy; view.ymax+=dy;
-    lastPx=px; lastPy=py; drawGraph();
-  } else if(e.touches.length===2 && pinchDist){
-    const d = touchDist(e.touches);
-    zoomAt(w/2, h/2, pinchDist/d);
-    pinchDist = d;
-  }
-},{passive:true});
-gcanvas.addEventListener('touchend',()=>{ dragging=false; pinchDist=null; });
-
-/* expression list */
-function renderExprList(){
-  const el = document.getElementById('exprList');
-  el.innerHTML = graphExprs.map(e=>`
-    <div class="expr-row" data-id="${e.id}">
-      <div class="swatch" style="background:${e.color}" data-role="swatch"></div>
-      <input type="text" value="${e.text.replace(/"/g,'&quot;')}" data-role="text">
-      <button class="eye ${e.visible?'':'off'}" data-role="eye">${e.visible?'\u25CF':'\u25CB'}</button>
-      <button class="del" data-role="del">×</button>
-    </div>`).join('');
-  el.querySelectorAll('.expr-row').forEach(row=>{
-    const id = Number(row.dataset.id);
-    const textInput = row.querySelector('[data-role="text"]');
-    textInput.addEventListener('input',(ev)=>{
-      graphExprs.find(x=>x.id===id).text = ev.target.value; drawGraph();
-    });
-    ['focus','click','keyup'].forEach(evt=>textInput.addEventListener(evt,()=>trackField(textInput)));
-    row.querySelector('[data-role="eye"]').addEventListener('click',()=>{
-      const item = graphExprs.find(x=>x.id===id); item.visible = !item.visible; renderExprList(); drawGraph();
-    });
-    row.querySelector('[data-role="del"]').addEventListener('click',()=>{
-      graphExprs = graphExprs.filter(x=>x.id!==id); renderExprList(); drawGraph();
-    });
-    row.querySelector('[data-role="swatch"]').addEventListener('click',()=>{
-      const item = graphExprs.find(x=>x.id===id);
-      item.color = palette[(palette.indexOf(item.color)+1)%palette.length];
-      renderExprList(); drawGraph();
-    });
-  });
-}
-document.getElementById('addExprBtn').addEventListener('click',()=>{
-  graphExprs.push({ id:exprSeq++, text:'y=', color:palette[graphExprs.length%palette.length], visible:true });
-  renderExprList(); drawGraph();
-});
-renderExprList();
-
-/* sliders */
-function renderSliders(){
-  const el = document.getElementById('sliderList');
-  el.innerHTML = sliders.map((s,i)=>`
-    <div class="slider-row" data-i="${i}">
-      <div class="s-head">
-        <input type="text" value="${s.name}" data-role="name">
-        <span class="s-val" data-role="val">${s.value}</span>
-        <button class="del" data-role="del">×</button>
-      </div>
-      <input type="range" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.value}" data-role="range">
-      <div class="s-range">
-        <input type="text" value="${s.min}" data-role="min">
-        <input type="text" value="${s.max}" data-role="max">
-      </div>
-    </div>`).join('');
-  el.querySelectorAll('.slider-row').forEach(row=>{
-    const i = Number(row.dataset.i);
-    row.querySelector('[data-role="name"]').addEventListener('input',(ev)=>{ sliders[i].name = ev.target.value || 'a'; drawGraph(); });
-    row.querySelector('[data-role="range"]').addEventListener('input',(ev)=>{
-      sliders[i].value = Number(ev.target.value);
-      row.querySelector('[data-role="val"]').textContent = sliders[i].value;
-      drawGraph();
-    });
-    row.querySelector('[data-role="min"]').addEventListener('change',(ev)=>{ sliders[i].min = Number(ev.target.value)||-10; renderSliders(); });
-    row.querySelector('[data-role="max"]').addEventListener('change',(ev)=>{ sliders[i].max = Number(ev.target.value)||10; renderSliders(); });
-    row.querySelector('[data-role="del"]').addEventListener('click',()=>{ sliders.splice(i,1); renderSliders(); drawGraph(); });
-  });
-}
-document.getElementById('addSliderBtn').addEventListener('click',()=>{
-  const used = sliders.map(s=>s.name);
-  let code = 97, name = 'a';
-  while(used.includes(name)){ code++; name = String.fromCharCode(code); }
-  sliders.push({ name, value:1, min:-10, max:10, step:0.1 });
-  renderSliders(); drawGraph();
-});
-
-/* ----- assistive math keypad ----- */
-let activeField = null;
-function trackField(el){
-  activeField = { el, start: el.selectionStart, end: el.selectionEnd };
-}
-function firstExprInput(){
-  return document.querySelector('#exprList .expr-row input[data-role="text"]');
-}
-function mpUpdateModel(el){
-  const row = el.closest('.expr-row');
-  if(!row) return;
-  const item = graphExprs.find(x=>x.id===Number(row.dataset.id));
-  if(item){ item.text = el.value; drawGraph(); }
-}
-function mpInsert(text){
-  if(!activeField || !document.body.contains(activeField.el)){
-    const first = firstExprInput();
-    if(!first) return;
-    activeField = { el:first, start:first.value.length, end:first.value.length };
-  }
-  const el = activeField.el;
-  const start = activeField.start ?? el.value.length;
-  const end = activeField.end ?? start;
-  const val = el.value;
-  el.value = val.slice(0,start) + text + val.slice(end);
-  const pos = start + text.length;
-  el.focus();
-  el.setSelectionRange(pos,pos);
-  activeField = { el, start:pos, end:pos };
-  mpUpdateModel(el);
-}
-function mpMove(dir){
-  if(!activeField || !document.body.contains(activeField.el)) return;
-  const el = activeField.el;
-  const cur = activeField.start ?? el.value.length;
-  const pos = Math.max(0, Math.min(el.value.length, cur + dir));
-  el.focus();
-  el.setSelectionRange(pos,pos);
-  activeField = { el, start:pos, end:pos };
-}
-function mpBackspace(){
-  if(!activeField || !document.body.contains(activeField.el)){
-    const first = firstExprInput();
-    if(!first) return;
-    activeField = { el:first, start:first.value.length, end:first.value.length };
-  }
-  const el = activeField.el;
-  const start = activeField.start ?? el.value.length;
-  const end = activeField.end ?? start;
-  const val = el.value;
-  let newVal, pos;
-  if(start !== end){ newVal = val.slice(0,start)+val.slice(end); pos = start; }
-  else if(start > 0){ newVal = val.slice(0,start-1)+val.slice(start); pos = start-1; }
-  else { return; }
-  el.value = newVal;
-  el.focus();
-  el.setSelectionRange(pos,pos);
-  activeField = { el, start:pos, end:pos };
-  mpUpdateModel(el);
-}
-document.getElementById('mpSymbols').querySelectorAll('[data-mp]').forEach(btn=>{
-  btn.addEventListener('mousedown',(e)=>e.preventDefault());
-  btn.addEventListener('click',()=>{
-    const k = btn.dataset.mp;
-    switch(k){
-      case 'sq': return mpInsert('^2');
-      case 'pow': return mpInsert('^');
-      case 'abs': { mpInsert('abs()'); return mpMove(-1); }
-      case 'sqrt': return mpInsert('sqrt(');
-      case 'pi': return mpInsert('pi');
-      default: return mpInsert(k);
-    }
-  });
-});
-document.querySelectorAll('.mp-col:nth-child(2) [data-mp]').forEach(btn=>{
-  btn.addEventListener('mousedown',(e)=>e.preventDefault());
-  btn.addEventListener('click',()=>mpInsert(btn.dataset.mp));
-});
-
-/* ABC letter strip */
-const mpLetters = document.getElementById('mpLetters');
-'abcdefghijklmnopqrstuvwxyz'.split('').forEach(l=>{
-  const b = document.createElement('button');
-  b.className='mp-btn'; b.textContent=l;
-  b.addEventListener('mousedown',(e)=>e.preventDefault());
-  b.addEventListener('click',()=>mpInsert(l));
-  mpLetters.appendChild(b);
-});
-document.getElementById('mpAbcBtn').addEventListener('click',(e)=>{
-  mpLetters.classList.toggle('show');
-  e.target.classList.toggle('on');
-});
-
-/* arrows + backspace + enter */
-document.getElementById('mpLeft').addEventListener('click',()=>mpMove(-1));
-document.getElementById('mpRight').addEventListener('click',()=>mpMove(1));
-document.getElementById('mpBack').addEventListener('mousedown',(e)=>e.preventDefault());
-document.getElementById('mpBack').addEventListener('click',mpBackspace);
-document.getElementById('mpEnter').addEventListener('click',()=>{
-  const rows = Array.from(document.querySelectorAll('#exprList .expr-row input[data-role="text"]'));
-  const idx = activeField ? rows.indexOf(activeField.el) : -1;
-  if(idx > -1 && idx < rows.length-1){
-    rows[idx+1].focus();
-    trackField(rows[idx+1]);
-  } else {
-    document.getElementById('addExprBtn').click();
-    const newRows = document.querySelectorAll('#exprList .expr-row input[data-role="text"]');
-    const last = newRows[newRows.length-1];
-    if(last){ last.focus(); trackField(last); }
-  }
-});
-
-/* functions dropdown */
-const funcDefs = [
-  ['sin','sin('],['cos','cos('],['tan','tan('],
-  ['asin','asin('],['acos','acos('],['atan','atan('],
-  ['sinh','sinh('],['cosh','cosh('],['tanh','tanh('],
-  ['ln','log('],['log₁₀','log10('],['exp','exp('],
-  ['sqrt','sqrt('],['abs','abs('],['floor','floor('],
-  ['ceil','ceil('],['round','round('],['min','min('],
-  ['max','max('],['mod','mod('],['n!','factorial('],
-  ['sign','sign('],['gcd','gcd('],['lcm','lcm('],
-];
-function renderMpFuncs(filter=''){
-  const f = filter.trim().toLowerCase();
-  const rows = funcDefs.filter(([name])=>name.toLowerCase().includes(f));
-  const list = document.getElementById('mpFuncList');
-  if(rows.length===0){ list.innerHTML = '<div class="const-empty">No matches</div>'; return; }
-  list.innerHTML = rows.map(([name,val])=>`<div class="const-item" data-val="${val}"><span class="c-name">${name}</span></div>`).join('');
-  list.querySelectorAll('.const-item').forEach(item=>{
-    item.addEventListener('click',()=>{ mpInsert(item.dataset.val); closeMpDrops(); });
-  });
-}
-function renderMpConsts(filter=''){
-  const f = filter.trim().toLowerCase();
-  const rows = constants.filter(([name])=>name.toLowerCase().includes(f));
-  const list = document.getElementById('mpConstList');
-  if(rows.length===0){ list.innerHTML = '<div class="const-empty">No matches</div>'; return; }
-  list.innerHTML = rows.map(([name,val])=>
-    `<div class="const-item" data-val="${val}"><span class="c-name">${name}</span><span class="c-val">${val}</span></div>`
-  ).join('');
-  list.querySelectorAll('.const-item').forEach(item=>{
-    item.addEventListener('click',()=>{ mpInsert(item.dataset.val); closeMpDrops(); });
-  });
-}
-function closeMpDrops(){
-  document.getElementById('mpFuncDrop').classList.add('hidden');
-  document.getElementById('mpConstDrop').classList.add('hidden');
-}
-document.getElementById('mpFuncBtn').addEventListener('click',(e)=>{
-  e.stopPropagation();
-  const drop = document.getElementById('mpFuncDrop');
-  const willOpen = drop.classList.contains('hidden');
-  closeMpDrops();
-  if(willOpen){ drop.classList.remove('hidden'); renderMpFuncs(); document.getElementById('mpFuncSearch').focus(); }
-});
-document.getElementById('mpConstBtn').addEventListener('click',(e)=>{
-  e.stopPropagation();
-  const drop = document.getElementById('mpConstDrop');
-  const willOpen = drop.classList.contains('hidden');
-  closeMpDrops();
-  if(willOpen){ drop.classList.remove('hidden'); renderMpConsts(); document.getElementById('mpConstSearch').focus(); }
-});
-document.getElementById('mpFuncSearch').addEventListener('input',(e)=>renderMpFuncs(e.target.value));
-document.getElementById('mpConstSearch').addEventListener('input',(e)=>renderMpConsts(e.target.value));
-document.addEventListener('click',(e)=>{
-  if(!e.target.closest('.mp-dropwrap')) closeMpDrops();
-});
-
-/* ================= UNIT CONVERSION ================= */
-const unitCategories = {
-  Length: ['mm','cm','m','km','in','ft','yd','mi','nmi'],
-  Mass: ['mg','g','kg','tonne','oz','lb','stone'],
-  Temperature: ['degC','degF','K'],
-  Time: ['ms','s','min','h','day','week','year'],
-  Speed: ['m/s','km/h','mi/h','knot'],
-  Data: ['b','kb','Mb','Gb','Tb'],
-  Area: ['mm2','cm2','m2','hectare','km2','acre','inch2','foot2'],
-  Volume: ['ml','l','m3','pt','gal','cup'],
-};
-const catSel = document.getElementById('convCat');
-Object.keys(unitCategories).forEach(c=>{
-  const o=document.createElement('option'); o.value=c; o.textContent=c; catSel.appendChild(o);
-});
-function fillUnitSelects(){
-  const list = unitCategories[catSel.value];
-  const from = document.getElementById('convFrom'), to = document.getElementById('convTo');
-  from.innerHTML = list.map(u=>`<option>${u}</option>`).join('');
-  to.innerHTML = list.map(u=>`<option>${u}</option>`).join('');
-  to.selectedIndex = Math.min(1,list.length-1);
-  runConvert();
-}
-function runConvert(){
-  const val = Number(document.getElementById('convVal').value)||0;
-  const from = document.getElementById('convFrom').value;
-  const to = document.getElementById('convTo').value;
-  try{
-    const res = mx.evaluate(`${val} ${from} to ${to}`);
-    document.getElementById('convResult').textContent = mx.format(res.toNumber ? res.toNumber(to) : res, {precision:10});
-  }catch(e){
-    document.getElementById('convResult').textContent = 'n/a';
-  }
-}
-catSel.addEventListener('change', fillUnitSelects);
-['convFrom','convTo','convVal'].forEach(id=>document.getElementById(id).addEventListener('input',runConvert));
-['convFrom','convTo'].forEach(id=>document.getElementById(id).addEventListener('change',runConvert));
-fillUnitSelects();
-
-/* ================= BASE / BITWISE ================= */
-function updateBaseDisplay(){
-  const dec = parseInt(document.getElementById('baseInput').value) || 0;
-  document.getElementById('baseBin').textContent = (dec>>>0).toString(2);
-  document.getElementById('baseOct').textContent = dec.toString(8);
-  document.getElementById('baseDec').textContent = dec;
-  document.getElementById('baseHex').textContent = dec.toString(16).toUpperCase();
-}
-document.getElementById('baseInput').addEventListener('input',updateBaseDisplay);
-updateBaseDisplay();
-document.querySelectorAll('[data-bit]').forEach(btn=>{
-  btn.addEventListener('click',()=>{
-    const a = parseInt(document.getElementById('baseInput').value)||0;
-    const b = parseInt(document.getElementById('baseB').value)||0;
-    let r;
-    switch(btn.dataset.bit){
-      case 'AND': r=a&b; break;
-      case 'OR': r=a|b; break;
-      case 'XOR': r=a^b; break;
-      case 'NOT': r=~a; break;
-      case 'SHL': r=a<<1; break;
-      case 'SHR': r=a>>1; break;
-    }
-    document.getElementById('bitResult').textContent = `Result: ${r}  (bin: ${(r>>>0).toString(2)}, hex: ${r.toString(16).toUpperCase()})`;
-  });
-});
 </script>
 </body>
 </html>

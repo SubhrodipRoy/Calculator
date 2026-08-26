@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VANTA // Graph</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="graph.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.1/math.min.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="brand-mark pulse">V9</div>
+      <div>
+        <h1>VANTA <span style="color:var(--accent2)">//</span> Compute Console</h1>
+        <p>Multi-domain analytical instrument</p>
+      </div>
+    </div>
+    <div class="status">
+      <div><span class="dot pulse"></span><b>Core</b> Online</div>
+      <div><b>Mode</b> Graph</div>
+      <div><b>Precision</b> f64</div>
+    </div>
+  </header>
+  <nav class="tabs">
+        <a href="index.html">Standard</a>
+        <a href="stats.html">Statistics</a>
+        <a href="matrix.html">Matrix</a>
+        <a href="graph.html" class="active">Graph</a>
+        <a href="3d.html">3D</a>
+        <a href="units.html">Units</a>
+        <a href="base.html">Base / Bitwise</a>
+  </nav>
+
+  <div class="grid">
+    <div class="panel">
+
+        <div class="graph-shell">
+          <div class="graph-sidebar">
+            <div class="side-label">Expressions</div>
+            <div id="exprList"></div>
+            <button class="ghost-add" id="addExprBtn">+ Add expression</button>
+            <div class="side-label">Sliders</div>
+            <div id="sliderList"></div>
+            <button class="ghost-add" id="addSliderBtn">+ Add slider</button>
+          </div>
+          <div class="graph-stage">
+            <div class="graph-toolbar">
+              <button id="zoomInBtn" title="Zoom in">+</button>
+              <button id="zoomOutBtn" title="Zoom out">−</button>
+              <button id="resetViewBtn" title="Reset view">⟲</button>
+              <span class="coord-readout" id="coordReadout"></span>
+            </div>
+            <canvas id="graphCanvas"></canvas>
+          </div>
+        </div>
+        <div class="hint">Built in-house, no external graphing service. Type expressions like <code>y=sin(x)*sqrt(x)</code> — reference a slider's letter directly in the expression. Drag the canvas to pan, scroll or pinch to zoom.</div>
+
+        <!-- ASSISTIVE MATH KEYPAD -->
+        <div class="mathpad">
+          <div class="mp-col">
+            <div class="mp-grid" id="mpSymbols">
+              <button class="mp-btn" data-mp="x">x</button>
+              <button class="mp-btn" data-mp="y">y</button>
+              <button class="mp-btn" data-mp="sq">a²</button>
+              <button class="mp-btn" data-mp="pow">a^b</button>
+              <button class="mp-btn" data-mp="(">(</button>
+              <button class="mp-btn" data-mp=")">)</button>
+              <button class="mp-btn" data-mp="<">&lt;</button>
+              <button class="mp-btn" data-mp=">">&gt;</button>
+              <button class="mp-btn" data-mp="abs">|a|</button>
+              <button class="mp-btn" data-mp=",">,</button>
+              <button class="mp-btn" data-mp="<=">≤</button>
+              <button class="mp-btn" data-mp=">=">≥</button>
+              <button class="mp-btn" id="mpAbcBtn">ABC</button>
+              <button class="mp-btn disabled" title="Voice input not available">🔊</button>
+              <button class="mp-btn" data-mp="sqrt">√</button>
+              <button class="mp-btn" data-mp="pi">π</button>
+            </div>
+            <div class="mp-letters" id="mpLetters"></div>
+          </div>
+
+          <div class="mp-col">
+            <div class="mp-grid">
+              <button class="mp-btn" data-mp="7">7</button>
+              <button class="mp-btn" data-mp="8">8</button>
+              <button class="mp-btn" data-mp="9">9</button>
+              <button class="mp-btn op" data-mp="/">÷</button>
+              <button class="mp-btn" data-mp="4">4</button>
+              <button class="mp-btn" data-mp="5">5</button>
+              <button class="mp-btn" data-mp="6">6</button>
+              <button class="mp-btn op" data-mp="*">×</button>
+              <button class="mp-btn" data-mp="1">1</button>
+              <button class="mp-btn" data-mp="2">2</button>
+              <button class="mp-btn" data-mp="3">3</button>
+              <button class="mp-btn op" data-mp="-">−</button>
+              <button class="mp-btn" data-mp="0">0</button>
+              <button class="mp-btn" data-mp=".">.</button>
+              <button class="mp-btn" data-mp="=">=</button>
+              <button class="mp-btn op" data-mp="+">+</button>
+            </div>
+          </div>
+
+          <div class="mp-side">
+            <div class="mp-dropwrap">
+              <button class="mp-btn" id="mpFuncBtn">functions</button>
+              <div class="mp-drop hidden" id="mpFuncDrop">
+                <input type="text" id="mpFuncSearch" placeholder="Search functions…">
+                <div class="const-list" id="mpFuncList"></div>
+              </div>
+            </div>
+            <div class="mp-arrowrow">
+              <button class="mp-btn" id="mpLeft">←</button>
+              <button class="mp-btn" id="mpRight">→</button>
+            </div>
+            <button class="mp-btn" id="mpBack">⌫</button>
+            <div class="mp-dropwrap">
+              <button class="mp-btn" id="mpConstBtn">⚛ constants</button>
+              <div class="mp-drop hidden" id="mpConstDrop">
+                <input type="text" id="mpConstSearch" placeholder="Search constants…">
+                <div class="const-list" id="mpConstList"></div>
+              </div>
+            </div>
+            <button class="mp-enter" id="mpEnter">↵</button>
+          </div>
+        </div>
+    </div>
+
+    <div class="panel">
+      <div class="side-title">History <button id="clearHist">Clear</button></div>
+      <div class="hist-list" id="histList"><div class="hist-empty">No calculations yet</div></div>
+      <div class="mem-box">
+        <div class="mem-row"><span>Memory</span><b id="memVal">0</b></div>
+        <div class="row-tools">
+          <button id="mPlus">M+</button>
+          <button id="mMinus">M−</button>
+          <button id="mR">MR</button>
+          <button id="mC">MC</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>VANTA-9 &nbsp;·&nbsp; local computation only &nbsp;·&nbsp; no data leaves this session</footer>
+</div>
+
+<script src="graph.js"></script>
+</body>
+</html>
