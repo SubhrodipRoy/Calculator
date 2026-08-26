@@ -311,6 +311,8 @@ button.key.toggleon{ background:rgba(63,224,208,0.15); border-color:var(--accent
         <button id="degBtn">DEG</button>
         <button id="radBtn" class="on">RAD</button>
         <button id="invBtn">INV</button>
+        <button id="sdBtn" title="Toggle fraction / decimal">S⇔D</button>
+        <button id="engBtn" title="Toggle engineering notation">ENG</button>
         <div class="const-wrap">
           <button class="const-btn" id="constToggle">⚛ Physical Constants ▾</button>
           <div class="const-panel hidden" id="constPanel">
@@ -355,10 +357,69 @@ mx.import({
   acos: x => typeof x==='number' ? fromRad(Math.acos(x)) : math.acos(x),
   atan: x => typeof x==='number' ? fromRad(Math.atan(x)) : math.atan(x),
 }, {override:true});
+mx.import({
+  toPolar: (x,y) => [Math.sqrt(x*x+y*y), fromRad(Math.atan2(y,x))],
+  toRect:  (r,theta) => { const rad = toRad(theta); return [r*Math.cos(rad), r*Math.sin(rad)]; },
+}, {override:true});
 function prettyExpr(e){
   return e.replaceAll('×','*').replaceAll('÷','/').replaceAll('π','pi').replaceAll('√','sqrt')
+          .replaceAll('∛','cbrt').replaceAll('⁄','/')
           .replace(/(\d+(\.\d+)?|\))!/g,'factorial($1)');
 }
+
+/* ---- unicode superscript helpers: real math notation instead of ^ or e-notation ---- */
+const SUPER_MAP = {'⁰':'0','¹':'1','²':'2','³':'3','⁴':'4','⁵':'5','⁶':'6','⁷':'7','⁸':'8','⁹':'9','⁻':'-'};
+const SUPER_DIGITS = {'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','-':'⁻'};
+const SUP_ALLOWED = /^[0-9\-]$/;
+function toSuperChar(ch){ return SUPER_DIGITS[ch] !== undefined ? SUPER_DIGITS[ch] : ch; }
+function toSuperscriptExponent(n){ return String(n).split('').map(toSuperChar).join(''); }
+function convertSuper(s){
+  const chars = Object.keys(SUPER_MAP).join('');
+  const re = new RegExp('['+chars+']+','g');
+  return s.replace(re, (m) => '^(' + m.split('').map(c=>SUPER_MAP[c]).join('') + ')');
+}
+let supMode = false;
+function enterSupMode(){ supMode = true; }
+function exitSupMode(){ supMode = false; }
+
+/* ---- result formatting: "m × 10ⁿ" instead of e-notation, (r, θ) for polar pairs ---- */
+let engMode = false;
+function formatResult(value){
+  if(value && typeof value === 'object'){
+    let arr = Array.isArray(value) ? value : (typeof value.toArray==='function' ? (()=>{ try{ return value.toArray(); }catch(e){ return null; } })() : null);
+    if(arr && arr.length===2 && typeof arr[0]==='number' && typeof arr[1]==='number'){
+      return `(${formatResult(arr[0])}, ${formatResult(arr[1])})`;
+    }
+  }
+  if(typeof value !== 'number' || !isFinite(value)){
+    try{ return mx.format(value, {precision:12}); }catch(e){ return String(value); }
+  }
+  if(value === 0) return '0';
+  const absVal = Math.abs(value);
+  const HIGH = 1e10, LOW = 1e-9;
+  if(engMode || absVal >= HIGH || absVal < LOW){
+    let exp = Math.floor(Math.log10(absVal));
+    if(engMode) exp = Math.floor(exp/3)*3;
+    let mantissa = value / Math.pow(10, exp);
+    let mStr = parseFloat(mantissa.toPrecision(8)).toString();
+    if(Math.abs(parseFloat(mStr)) >= 10){ mantissa = mantissa/10; exp += 1; mStr = parseFloat(mantissa.toPrecision(8)).toString(); }
+    return `${mStr} × 10${toSuperscriptExponent(exp)}`;
+  }
+  return mx.format(value, {precision:12});
+}
+
+/* ---- expression preprocessing: percent + factorial (via prettyExpr) + superscript ---- */
+function toEvaluable(raw){
+  let c = prettyExpr(raw);
+  c = c.replace(/(\d+(\.\d+)?|\))%/g, '($1/100)');
+  c = convertSuper(c);
+  return c;
+}
+
+/* ---- STO/RCL variable memory (A-F, X, Y; M shares the existing Memory register) ---- */
+function loadVars(){ try{ return JSON.parse(localStorage.getItem('vanta_sci_vars')||'{}'); }catch(e){ return {}; } }
+function saveVars(){ localStorage.setItem('vanta_sci_vars', JSON.stringify(vars)); }
+let vars = loadVars();
 /* ---- physical constants library ---- */
 const constants = [
   ['Proton mass','1.6726219e-27'],
@@ -463,18 +524,53 @@ function delOne(){ expr = expr.slice(0,-1); renderExpr(); }
 function evaluate(){
   if(!expr) return;
   try{
-    let clean = prettyExpr(expr);
-    clean = clean.replace(/(\d+(\.\d+)?|\))!/g,'factorial($1)');
-    const result = mx.evaluate(clean);
-    const val = (typeof result === 'number') ? mx.format(result, {precision:12}) : result.toString();
+    const clean = toEvaluable(expr);
+    const result = mx.evaluate(clean, vars);
+    const val = formatResult(result);
     prevLine.textContent = expr + ' =';
     if(typeof result === 'number') setLastAnswer(result);
     expr = val;
+    sdIsFraction = false;
     renderExpr();
     pushHistory(prevLine.textContent.replace(/ =$/,''), val);
   }catch(err){
     errTag.textContent = 'SYNTAX ERR';
   }
+}
+function getCurrentNumericValue(){
+  try{
+    const r = mx.evaluate(toEvaluable(expr), vars);
+    return typeof r === 'number' ? r : NaN;
+  }catch(e){ return getLastAnswer(); }
+}
+function applyDMS(){
+  const v = getCurrentNumericValue();
+  if(!isFinite(v)) return;
+  const sign = v<0 ? '-' : '';
+  const av = Math.abs(v);
+  const d = Math.floor(av);
+  const mFull = (av-d)*60;
+  const m = Math.floor(mFull);
+  const s = (mFull-m)*60;
+  expr = `${sign}${d}°${m}'${s.toFixed(2)}"`;
+  renderExpr();
+}
+let sdIsFraction = false;
+function toggleSD(){
+  const v = getCurrentNumericValue();
+  if(!isFinite(v)) return;
+  if(!sdIsFraction){
+    try{
+      const f = mx.fraction(v);
+      const sign = f.s < 0 ? '-' : '';
+      expr = `${sign}${f.n}⁄${f.d}`;
+      sdIsFraction = true;
+    }catch(e){ return; }
+  } else {
+    expr = formatResult(v);
+    sdIsFraction = false;
+  }
+  renderExpr();
 }
 
 /* keypad */
@@ -482,17 +578,29 @@ const sciKeys = [
   ['(',''],[')',''],['π',''],['e',''],['n!',''],
   ['sin','fn'],['cos','fn'],['tan','fn'],['ln','fn'],['log','fn'],
   ['√','fn'],['x²','fn'],['x^y','fn'],['10^x','fn'],['e^x','fn'],
+  ['∛','fn'],['x³','fn'],['x⁻¹','fn'],['ⁿ√','fn'],['i','fn'],
+  ['nPr','fn'],['nCr','fn'],['Pol(','fn'],['Rec(','fn'],['DMS','fn'],
+  ['STO','fn'],['RCL','fn'],['Ran#','fn'],['RanInt','fn'],['HYP','fn'],
   ['7',''],['8',''],['9',''],['÷','op'],['AC','warn'],
   ['4',''],['5',''],['6',''],['×','op'],['DEL','warn'],
   ['1',''],['2',''],['3',''],['-','op'],['%','op'],
   ['0',''],['.',''],['Ans','fn'],['+','op'],['=','eq'],
 ];
 const padSci = document.getElementById('padScientific');
+let hypMode = false;
 sciKeys.forEach(([label,cls])=>{
   const b = document.createElement('button');
   b.className = 'key '+cls;
   b.textContent = label;
-  b.addEventListener('click',()=>handleSciKey(label));
+  if(label==='STO'){
+    b.addEventListener('click',(e)=>{ e.stopPropagation(); openVarPicker('STO', b); });
+  } else if(label==='RCL'){
+    b.addEventListener('click',(e)=>{ e.stopPropagation(); openVarPicker('RCL', b); });
+  } else if(label==='HYP'){
+    b.addEventListener('click',()=>{ hypMode=!hypMode; b.classList.toggle('toggleon',hypMode); });
+  } else {
+    b.addEventListener('click',()=>handleSciKey(label));
+  }
   padSci.appendChild(b);
 });
 
@@ -511,7 +619,9 @@ function syncAngleUI(){
 syncAngleUI();
 
 function handleSciKey(label){
-  const fnName = invMode ? {sin:'asin',cos:'acos',tan:'atan'}[label] : label;
+  if(supMode && !SUP_ALLOWED.test(label) && !['x^y','10^x','e^x'].includes(label)){
+    exitSupMode();
+  }
   switch(label){
     case 'AC': return clearAll();
     case 'DEL': return delOne();
@@ -520,21 +630,42 @@ function handleSciKey(label){
     case 'e': return insert('e');
     case 'n!': return insert('!');
     case '√': return insert('√(');
-    case 'x²': return insert('^2');
-    case 'x^y': return insert('^');
-    case '10^x': return insert('10^');
-    case 'e^x': return insert('e^');
-    case 'Ans': return insert(mx.format(getLastAnswer(),{precision:10}));
-    case 'sin': case 'cos': case 'tan':
-      return insert((fnName||label)+'(');
+    case '∛': return insert('∛(');
+    case 'ⁿ√': return insert('nthRoot(');
+    case 'x²': return insert('²');
+    case 'x³': return insert('³');
+    case 'x⁻¹': return insert('⁻¹');
+    case 'x^y': enterSupMode(); return;
+    case '10^x': insert('10'); enterSupMode(); return;
+    case 'e^x': insert('e'); enterSupMode(); return;
+    case 'i': return insert('i');
+    case 'nPr': return insert('permutations(');
+    case 'nCr': return insert('combinations(');
+    case 'Pol(': return insert('toPolar(');
+    case 'Rec(': return insert('toRect(');
+    case 'Ran#': return insert('random()');
+    case 'RanInt': return insert('randomInt(');
+    case 'DMS': return applyDMS();
+    case 'Ans': return insert(formatResult(getLastAnswer()));
+    case 'sin': case 'cos': case 'tan': {
+      let fname = label;
+      if(hypMode && invMode) fname = 'a'+label+'h';
+      else if(hypMode) fname = label+'h';
+      else if(invMode) fname = {sin:'asin',cos:'acos',tan:'atan'}[label];
+      return insert(fname+'(');
+    }
     case 'ln': return insert('log(');
     case 'log': return insert('log10(');
-    default: return insert(label);
+    default:
+      if(supMode && SUP_ALLOWED.test(label)) return insert(toSuperChar(label));
+      return insert(label);
   }
 }
 
 /* keyboard support */
 document.addEventListener('keydown',(e)=>{
+  if(e.key==='^'){ enterSupMode(); return; }
+  if(/[0-9\-]/.test(e.key) && supMode){ insert(toSuperChar(e.key)); return; }
   if(/[0-9+\-*/.()]/.test(e.key)){ insert(e.key==='*'?'×':e.key==='/'?'÷':e.key); }
   else if(e.key==='Enter'){ evaluate(); }
   else if(e.key==='Backspace'){ delOne(); }
@@ -569,6 +700,45 @@ document.addEventListener('click',(e)=>{
   if(!constPanel.contains(e.target) && e.target!==constToggle) closeConstPanel();
 });
 renderConstants();
+
+/* STO/RCL variable picker (A-F, X, Y; M shares the existing Memory register) */
+const varPanel = document.createElement('div');
+varPanel.className = 'const-panel hidden';
+varPanel.style.position = 'fixed';
+document.body.appendChild(varPanel);
+const VAR_LETTERS = ['A','B','C','D','E','F','X','Y','M'];
+let varMode = 'STO';
+function openVarPicker(mode, btnEl){
+  varMode = mode;
+  const rect = btnEl.getBoundingClientRect();
+  varPanel.style.left = rect.left + 'px';
+  varPanel.style.top = (rect.bottom + 6) + 'px';
+  varPanel.innerHTML = `<div style="padding:10px; display:grid; grid-template-columns:repeat(3,1fr); gap:6px;">` +
+    VAR_LETTERS.map(l=>`<button class="key" data-var="${l}" style="padding:8px 4px;">${l}</button>`).join('') +
+    `</div>`;
+  varPanel.querySelectorAll('[data-var]').forEach(btn=>{
+    btn.addEventListener('click',(e)=>{
+      e.stopPropagation();
+      const letter = btn.dataset.var;
+      if(varMode==='STO'){
+        const val = getCurrentNumericValue();
+        if(letter==='M') setMemory(val); else { vars[letter]=val; saveVars(); }
+      } else {
+        if(letter==='M') insert(formatResult(getMemory()));
+        else insert(letter);
+      }
+      varPanel.classList.add('hidden');
+    });
+  });
+  varPanel.classList.remove('hidden');
+}
+document.addEventListener('click',(e)=>{
+  if(!varPanel.contains(e.target)) varPanel.classList.add('hidden');
+});
+
+/* S⇔D (fraction/decimal toggle) + ENG (engineering notation toggle) */
+document.getElementById('sdBtn').addEventListener('click', toggleSD);
+document.getElementById('engBtn').addEventListener('click',(e)=>{ engMode=!engMode; e.target.classList.toggle('on',engMode); });
 
 /* reuse from history / memory recall */
 document.addEventListener('vanta:reuse',(e)=>{ expr = e.detail; renderExpr(); });
